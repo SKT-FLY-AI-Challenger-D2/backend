@@ -1,0 +1,19 @@
+#opencv-python  
+#yt-dlp
+
+# default
+pydantic
+python-dotenv
+
+# for main.py
+fastapi
+uvicorn
+
+# for app/features/video/video_service.py
+google-api-python-client
+youtube-transcript-api
+
+# for ai
+langgraph 
+langchain-google-genai 
+langchain-core
