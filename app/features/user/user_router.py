@@ -5,5 +5,5 @@ from app.core.database import get_db
 router = APIRouter()
 
 @router.get("/test")
-def test_video():
-    return {"message": "Video Router is working!"}
+def test_user():
+    return {"message": "User Router is working!"}
