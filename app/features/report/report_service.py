@@ -1,6 +1,6 @@
 from app.ai.supervisor import build_graph
 from app.features.report.report_schema import AnalysisRequest, AnalysisResult
-
+import httpx
 # [TODO]: DB 저장
 # from app.features.report.report_repository import ReportRepository
 
@@ -27,24 +27,41 @@ class ReportService:
         print(f"[ReportService] 분석 시작: {request.youtube_url}")
 
         try:
-            # 1. AI Supervisor 호출
-            initial_state = {"youtube_url": request.youtube_url}
-            ai_output = self.ai_graph.invoke(initial_state)
+            response = httpx.post( #httpx가 비동기가 가능해서 httpx 사용
+                url = "http://127.0.0.1:8000/analyze",
+                json={
+                    "youtube_url" : request.youtube_url
+                },
+                timeout = 600 # timeout 넉넉하게 걸었음.
+            )
+            result = response.json() 
+            result_legal = result.get("legal_issue", False) # 일단 기본값 False로 설정
+            result_deepfake = result.get("deepfake_issue", False)
+            result_ai_voice = result.get("ai_voice_issue", False)
 
-            # 2. 결과 파싱
-            result_text = ai_output.get("analysis_result")
-            error_msg = ai_output.get("error")
+            # 결과 텍스트 생성
+            result_text= []
+            if result_legal is True:
+                result_text.append("법적으로 문제가 있는 영상입니다.\n")
+            if result_deepfake is True:
+                result_text.append("딥페이크 영상일 확률이 있습니다.\n")
+            if result_ai_voice is True:
+                result_text.append("AI 목소리 영상일 확률이 있습니다.\n")
+            if len(result_text) == 0:
+                result_text = "해당 영상은 문제가 없습니다."
+            result_text = "\n".join(result_text)
 
-            if error_msg:
-                return AnalysisResult(error=error_msg)
-
-            # [TODO]: DB에 리포트 저장 로직
+            if response.status_code != 200:
+                raise Exception(f"AI 서버 호출 실패: {response.status_code}")
 
             return AnalysisResult(
-                report=result_text,
-                error=None
+                report = result_text,
+                error = None
             )
-
+            # [TODO]: DB에 리포트 저장 로직
         except Exception as e:
-            print(f"[ReportService] 에러 발생: {e}")
-            return AnalysisResult(error=str(e))
+            print(f"[ReportService] 분석 중 오류 발생: {e}")
+            return AnalysisResult(
+                report = None,
+                error = str(e)
+            )
