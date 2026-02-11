@@ -15,7 +15,7 @@ def test_video():
 @router.post("/analysis", response_model=SearchResponse)
 def search_video_endpoint(request: SearchRequest):
     """
-    [POST] /search
+    [POST] /analysis
     제목과 채널명을 받아 유튜브 URL을 검색 후 사기 여부를 분석
     """
     try:
