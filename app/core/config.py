@@ -15,4 +15,8 @@ class Settings:
         "mysql+pymysql://root:1234@localhost:3306/skt_fly_ai_final_project"
     )
 
+    YOUTUBE_API_KEY: str = os.getenv("YOUTUBE_API_KEY", "")
+
+    GOOGLE_API_KEY: str = os.getenv("GOOGLE_API_KEY", "")
+
 settings = Settings()

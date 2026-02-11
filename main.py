@@ -54,10 +54,10 @@ def create_app() -> FastAPI:
 
     # 라우터 등록
     # app.include_router(video_router)
-    app.include_router(user_router, prefix="/api/v1/users", tags=["User"])
-    app.include_router(video_router, prefix="/api/v1/videos", tags=["Video"])
-    app.include_router(report_router, prefix="/api/v1/reports", tags=["Report"])
-    app.include_router(complaint_router, prefix="/api/v1/complaints", tags=["Complaint"])
+    app.include_router(user_router, prefix="/api/users", tags=["User"])
+    app.include_router(video_router, prefix="/api/videos", tags=["Video"])
+    app.include_router(report_router, prefix="/api/reports", tags=["Report"])
+    app.include_router(complaint_router, prefix="/api/complaints", tags=["Complaint"])
 
     # 헬스 체크
     @app.get("/")
