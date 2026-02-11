@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, status
 from app.features.video.video_schema import SearchRequest, SearchResponse
 from app.features.video.video_service import VideoService
 
@@ -14,5 +14,12 @@ def search_video_endpoint(request: SearchRequest):
     """
     try:
         return video_service.search_and_analyze_video(request)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    except ValueError as e: # API 키 누락 등 문제
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+            detail=f"설정 에러: {str(e)}"
+        )
+    except Exception as e: 
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+            detail=f"서버 에러: {str(e)}")

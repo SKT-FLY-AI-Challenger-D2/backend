@@ -1,5 +1,5 @@
 from typing import Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 class SearchRequest(BaseModel):
     """
@@ -8,6 +8,10 @@ class SearchRequest(BaseModel):
     title: str                              # 영상 제목
     channel: str                            # 채널명
     # runtime: Optional[str] = None         # [TODO] runtime 추가 예정
+
+    model_config = ConfigDict(
+        extra='forbid' # 추가로 들어오는 필드 금지(추가 시 422 error)
+    )
 
 class SearchResponse(BaseModel):
     """
