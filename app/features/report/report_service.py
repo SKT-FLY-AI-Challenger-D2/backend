@@ -1,4 +1,4 @@
-from app.ai.supervisor import build_graph
+#from app.ai.supervisor import build_graph
 from app.features.report.report_schema import AnalysisRequest, AnalysisResult
 import httpx
 # [TODO]: DB 저장
@@ -10,9 +10,10 @@ class ReportService:
     """
 
     def __init__(self):
-        # 그래프 초기화
-        self.ai_graph = build_graph()
+        # 그래프 초기화. 더이상 안쓴다 
+        #self.ai_graph = build_graph()
         # self.report_repo = ReportRepository()
+        pass
 
     def analyze_video(self, request: AnalysisRequest) -> AnalysisResult:
         """
@@ -28,34 +29,40 @@ class ReportService:
 
         try:
             response = httpx.post( #httpx가 비동기가 가능해서 httpx 사용
-                url = "http://127.0.0.1:8000/analyze",
+                url = "http://127.0.0.1:8001/analyze", # AI 서버와 통신
                 json={
                     "youtube_url" : request.youtube_url
                 },
                 timeout = 600 # timeout 넉넉하게 걸었음.
             )
-            result = response.json() 
-            result_legal = result.get("legal_issue", False) # 일단 기본값 False로 설정
-            result_deepfake = result.get("deepfake_issue", False)
-            result_ai_voice = result.get("ai_voice_issue", False)
+            ai_result = response.json()
 
-            # 결과 텍스트 생성
-            result_text= []
-            if result_legal is True:
-                result_text.append("법적으로 문제가 있는 영상입니다.\n")
-            if result_deepfake is True:
-                result_text.append("딥페이크 영상일 확률이 있습니다.\n")
-            if result_ai_voice is True:
-                result_text.append("AI 목소리 영상일 확률이 있습니다.\n")
-            if len(result_text) == 0:
-                result_text = "해당 영상은 문제가 없습니다."
-            result_text = "\n".join(result_text)
+            legal_score = ai_result.get("legal", {}).get("legal_issue_score", 0.0)
+            legal_evidence = ai_result.get("legal", {}).get("legal_issue_evidence", [])
+
+            deepfake_score = ai_result.get("deepfake", {}).get("deepfake_score", 0.0)
+            deepfake_evidence = ai_result.get("deepfake", {}).get("deepfake_evidence", [])
+
+            fact_score = ai_result.get("fact", {}).get("fake_score", 0.0)
+            fact_evidence = ai_result.get("fact", {}).get("fake_evidence", [])
+
+            final_score = ai_result.get("final_score", 0.0) # default = 0.0
+            if final_score >= 0.7: # 0.7 이상 : 위험도 2  ( 높음 )
+                final_status = 2
+            elif final_score >= 0.3: # 0.3 이상 : 위험도 1 ( 중간 )
+                final_status = 1
+            else:
+                final_status = 0 # 0.3 미만 : 위험도 0 ( 낮음 )
+            
+            analysis_report = ai_result.get("report", "") # 긴 글의 보고서 하단 표시용.
+
+            
 
             if response.status_code != 200:
                 raise Exception(f"AI 서버 호출 실패: {response.status_code}")
 
             return AnalysisResult(
-                report = result_text,
+                report =    result_text,
                 error = None
             )
             # [TODO]: DB에 리포트 저장 로직

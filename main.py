@@ -36,4 +36,4 @@ app = create_app()
 
 if __name__ == "__main__":
     # 로컬 개발용 실행 설정
-    uvicorn.run("main:app", host="127.0.0.1", port=8001, reload=True) # AI 서버와의 통신을 위해 8001 포트 사용
+    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True) # AI 서버와의 통신을 위해 8000 포트 사용
