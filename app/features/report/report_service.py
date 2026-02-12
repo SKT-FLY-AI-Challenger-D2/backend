@@ -39,50 +39,74 @@ class ReportService:
 
             legal_score = ai_result.get("legal", {}).get("legal_issue_score", 0.0)
             legal_evidence = ai_result.get("legal", {}).get("legal_issue_evidence", [])
-            if legal_evidence : # 먼가 내용이 담겨 왔다면
-                legal_status = "위법의 소지가 있고"
+            if legal_evidence and (legal_score >=0.4): # 먼가 내용이 담겨 있고 점수도 0.4 이상이면
+                legal_status = 1 # 있으면 1, 없으면 0
             else:
-                legal_status = ""
+                legal_status = 0
 
             deepfake_score = ai_result.get("deepfake", {}).get("deepfake_score", 0.0)
             deepfake_evidence = ai_result.get("deepfake", {}).get("deepfake_evidence", [])
-            if deepfake_evidence :
-                deepfake_status = "딥페이크로 조작된 영상일 가능성이 있고"
+            if deepfake_evidence and (deepfake_score >=0.4) :
+               deepfake_status = 1
             else:
-                deepfake_status = ""
+                deepfake_status = 0
 
             fact_score = ai_result.get("fact", {}).get("fake_score", 0.0)
             fact_evidence = ai_result.get("fact", {}).get("fake_evidence", [])
-            if fact_evidence :
-                fact_status = "허위 사실의 가능성이 있고"
+            if fact_evidence and ( fact_score >=0.4 ):
+                fact_status = 1
             else:
-                fact_status = ""
+                fact_status = 0
+
+            danger_evidence = legal_evidence + deepfake_evidence + fact_evidence
+
+            short_report = "해당 영상은 분석 결과 위험한 영상일"
+            if legal_status == 1 and deepfake_status == 1 and fact_status == 1:
+                short_report = "해당 영상은 AI로 생성된 허위 정보를 포함한 위법의 소지가 있는 영상일"
+            elif legal_status == 1 and deepfake_status == 1 and fact_status == 0:
+                short_report = "해당 영상은 AI로 생성된 위법의 소지가 있는 영상일"
+            elif legal_status == 1 and deepfake_status == 0 and fact_status == 1:
+                short_report = "해당 영상은 허위 정보를 포함한 위법의 소지가 있는 영상일"
+            elif legal_status == 1 and deepfake_status == 0 and fact_status == 0:
+                short_report = "해당 영상은 위법의 소지가 있는 영상일"
+            elif legal_status == 0 and deepfake_status == 1 and fact_status == 1:
+                short_report = "해당 영상은 AI로 생성된 허위 정보를 포함한 영상일"
+            elif legal_status == 0 and deepfake_status == 1 and fact_status == 0:
+                short_report = "해당 영상은 AI로 생성된 영상일"
+            elif legal_status == 0 and deepfake_status == 0 and fact_status == 1:
+                short_report = "해당 영상은 허위 정보를 포함한 영상일"
 
             final_score = ai_result.get("final_score", 0.0) # default = 0.0
+
+
             if final_score >= 0.7: # 0.7 이상 : 위험도 2  ( 높음 )
                 final_status = 2
-                short_report = f"해당 영상은 {legal_status}, {deepfake_evidence}, {fact_evidence} 피해 위험이 높은 영상입니다."
+                short_report_result = short_report + " 확률이 매우 높아 위험합니다."  
+
             elif final_score >= 0.3: # 0.3 이상 : 위험도 1 ( 중간 )
                 final_status = 1
-                short_report = f"해당 영상은 {legal_status}, {deepfake_evidence}, {fact_evidence} 피해 위험이 있기에 주의가 필요합니다."
+                short_report_result = short_report + " 확률이 있어 주의가 필요합니다."
             else:
                 final_status = 0 # 0.3 미만 : 위험도 0 ( 낮음 )
-                short_report = "해당 영상은 안전한 영상일 확률이 높습니다."
-            
+                short_report_result = "해당 영상은 안전한 영상일 확률이 높습니다."
+
             analysis_report = ai_result.get("report", "") # 보고서용 긴 글.
 
+   
 
-
-            
 
             if response.status_code != 200:
                 raise Exception(f"AI 서버 호출 실패: {response.status_code}")
 
             return AnalysisResult(
-                report =    result_text,
-                error = None
+              final_score = final_score,
+              final_risk_level = final_status,
+              danger_evidence = danger_evidence,
+              analysis_report = analysis_report,
+              short_report = short_report_result,
             )
             # [TODO]: DB에 리포트 저장 로직
+            
         except Exception as e:
             print(f"[ReportService] 분석 중 오류 발생: {e}")
             return AnalysisResult(

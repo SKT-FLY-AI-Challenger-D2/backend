@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 from pydantic import BaseModel
 
 class AnalysisRequest(BaseModel):
@@ -11,5 +11,10 @@ class AnalysisResult(BaseModel):
     """
     AI 분석 결과 스키마
     """
-    report: Optional[str] = None
+
+    final_score: Optional[float] = None
+    final_risk_level: Optional[int] = None
+    danger_evidence: Optional[List[str]] = []
+    analysis_report: Optional[str] = None
+    short_report: Optional[str] = None
     error: Optional[str] = None
