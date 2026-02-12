@@ -39,22 +39,39 @@ class ReportService:
 
             legal_score = ai_result.get("legal", {}).get("legal_issue_score", 0.0)
             legal_evidence = ai_result.get("legal", {}).get("legal_issue_evidence", [])
+            if legal_evidence : # 먼가 내용이 담겨 왔다면
+                legal_status = "위법의 소지가 있고"
+            else:
+                legal_status = ""
 
             deepfake_score = ai_result.get("deepfake", {}).get("deepfake_score", 0.0)
             deepfake_evidence = ai_result.get("deepfake", {}).get("deepfake_evidence", [])
+            if deepfake_evidence :
+                deepfake_status = "딥페이크로 조작된 영상일 가능성이 있고"
+            else:
+                deepfake_status = ""
 
             fact_score = ai_result.get("fact", {}).get("fake_score", 0.0)
             fact_evidence = ai_result.get("fact", {}).get("fake_evidence", [])
+            if fact_evidence :
+                fact_status = "허위 사실의 가능성이 있고"
+            else:
+                fact_status = ""
 
             final_score = ai_result.get("final_score", 0.0) # default = 0.0
             if final_score >= 0.7: # 0.7 이상 : 위험도 2  ( 높음 )
                 final_status = 2
+                short_report = f"해당 영상은 {legal_status}, {deepfake_evidence}, {fact_evidence} 피해 위험이 높은 영상입니다."
             elif final_score >= 0.3: # 0.3 이상 : 위험도 1 ( 중간 )
                 final_status = 1
+                short_report = f"해당 영상은 {legal_status}, {deepfake_evidence}, {fact_evidence} 피해 위험이 있기에 주의가 필요합니다."
             else:
                 final_status = 0 # 0.3 미만 : 위험도 0 ( 낮음 )
+                short_report = "해당 영상은 안전한 영상일 확률이 높습니다."
             
-            analysis_report = ai_result.get("report", "") # 긴 글의 보고서 하단 표시용.
+            analysis_report = ai_result.get("report", "") # 보고서용 긴 글.
+
+
 
             
 
