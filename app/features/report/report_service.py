@@ -87,13 +87,21 @@ class ReportService:
                 evidence = data.get(evidence_key, [])
                 # 증거가 있고 점수가 0.4 이상이면 1(위험), 아니면 0
                 status = 1 if evidence and (score >= 0.4) else 0
-                return status, evidence
+                return score, status, evidence
 
-            legal_status, legal_evidence = check_risk("legal", "legal_issue_score", "legal_issue_evidence")
-            deepfake_status, deepfake_evidence = check_risk("deepfake", "deepfake_score", "deepfake_evidence")
-            fact_status, fact_evidence = check_risk("fact", "fake_score", "fake_evidence")
+            legal_score, legal_status, legal_evidence = check_risk("legal", "legal_issue_score", "legal_issue_evidence")
+            deepfake_score, deepfake_status, deepfake_evidence = check_risk("deepfake", "deepfake_score", "deepfake_evidence")
+            fact_score, fact_status, fact_evidence = check_risk("fact", "fake_score", "fake_evidence")
 
-            danger_evidence = legal_evidence + deepfake_evidence + fact_evidence
+            # danger_evidence : 일단 특정 점수 ( 0.6으로 우선 세팅 ) 넘기면 danger_evidence에 추가하도록 함
+            danger_threshold = 0.6
+            danger_evidence = []
+            if legal_score >= danger_threshold:
+                danger_evidence.extend(legal_evidence)
+            if deepfake_score >= danger_threshold:
+                danger_evidence.extend(deepfake_evidence)
+            if fact_score >= danger_threshold:
+                danger_evidence.extend(fact_evidence)
 
             # 짧은 리포트 생성 (순서: Deepfake -> Fact -> Legal)
             descriptions = []
