@@ -1,0 +1,22 @@
+fastapi
+uvicorn
+
+python-dotenv
+pydantic
+
+# Database
+sqlalchemy
+pymysql
+cryptography
+
+# Test
+pytest
+httpx
+
+# for app/features/video/video_service.py
+google-api-python-client
+
+# # for ai
+# langgraph 
+# langchain-google-genai 
+# langchain-core
