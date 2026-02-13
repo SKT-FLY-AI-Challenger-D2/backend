@@ -7,7 +7,7 @@ class SearchRequest(BaseModel):
     """
     title: str                              # 영상 제목
     channel: str                            # 채널명
-    #duration: int                           # 동영상의 총재생시간(초), 일단 테스트용으로 주석처리 
+    duration: int                           # 동영상의 총재생시간(초), 일단 테스트용으로 주석처리 
 
     model_config = ConfigDict(
         extra='forbid' # 추가로 들어오는 필드 금지(추가 시 422 error)
