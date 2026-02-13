@@ -49,7 +49,7 @@ class VideoService:
                 youtube_url=search_result['url'],
             )
             
-            analysis_result = self.report_service.analyze_video(analysis_request)
+            analysis_data = self.report_service.analyze_video(analysis_request)
         except Exception as e: # report_service.py 과정에서 오류 발생 시
             return SearchResponse(
                 video_id=search_result['video_id'],
@@ -62,16 +62,23 @@ class VideoService:
             )
 
         # 3. 결과 통합 및 반환
-        response = SearchResponse(
+        response =  SearchResponse(
             video_id=search_result['video_id'],
             youtube_url=search_result['url'],
             title=search_result['title'],
             channel_title=search_result['channel_title'],
             found=True,
-            # Report 서비스의 결과를 Video 응답 스키마에 매핑
-            analysis_result=analysis_result.report, 
-            error=analysis_result.error,
-            message="분석 완료" if not analysis_result.error else "분석 실패"
+            error=None,
+            message=None,
+            
+            final_score=analysis_data.final_score,
+            final_risk_level=analysis_data.final_risk_level,
+            danger_evidence=analysis_data.danger_evidence,
+            analysis_report=analysis_data.analysis_report,
+            short_report=analysis_data.short_report
         )
 
         return response
+
+
+     
