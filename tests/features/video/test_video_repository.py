@@ -4,6 +4,16 @@ from app.features.video.video_model import Video, WatchHistory
 from app.features.user.user_repository import UserRepository
 from app.features.user.user_model import User
 
+# [테스트 목적] VideoRepository의 Video CRUD + status 필터 조회 검증
+# [테스트 방식] 인메모리 SQLite DB + Repository 메서드 호출
+# [테스트 동작]
+#   1. create_video → 생성 확인
+#   2. get_video → video_title 일치 assert
+#   3. get_videos_by_status("PENDING") → 1건 이상, video_id 일치 assert
+#   4. update_video (status → "SAFE") → 변경 확인
+#   5. delete_video → get_video → None assert
+# [Input] Video(video_id="v1", status="PENDING", video_runtime=100)
+# [Output] CRUD 각 단계 정상, status 필터 조회 1건 이상, 삭제 후 None
 def test_video_crud(db_session):
     repo = VideoRepository(db_session)
 
@@ -34,6 +44,14 @@ def test_video_crud(db_session):
     repo.delete_video("v1")
     assert repo.get_video("v1") is None
 
+# [테스트 목적] VideoRepository의 WatchHistory 저장 및 조회 검증
+# [테스트 방식] 인메모리 SQLite DB + Repository 메서드 호출
+# [테스트 동작]
+#   1. UserRepository.create_user + VideoRepository.create_video (선행조건)
+#   2. add_watch_history로 시청 기록 생성
+#   3. get_user_watch_history → 1건, video_id 일치 assert
+# [Input] User("u_watch") + Video("v_watch") → WatchHistory(history_id="h1")
+# [Output] 시청 기록 1건 조회, video_id="v_watch" 일치
 def test_watch_history(db_session):
     video_repo = VideoRepository(db_session)
     user_repo = UserRepository(db_session)

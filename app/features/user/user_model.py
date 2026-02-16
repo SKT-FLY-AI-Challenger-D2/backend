@@ -9,7 +9,7 @@ class User(Base):
     user_id = Column(String(255), primary_key=True)
     password = Column(String(255), nullable=False)
     name = Column(String(100), nullable=False)
-    sex = Column(String(10))
+    sex = Column(String(1))
     birth_date = Column(Date)
     created_at = Column(DateTime, default=func.now())
     user_email = Column(String(255), unique=True, nullable=False)
