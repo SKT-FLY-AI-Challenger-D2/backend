@@ -4,6 +4,9 @@ import re
 from app.features.video.video_search import VideoSearch
 from app.features.video.video_schema import SearchRequest, SearchResponse
 
+from app.features.video.video_model import Video
+from app.features.video.video_repository import VideoRepository
+
 from app.features.report.report_service import ReportService
 from app.features.report.report_schema import AnalysisRequest, AnalysisResult
 from app.features.report.report_repository import ReportRepository
@@ -17,6 +20,7 @@ class VideoService:
         self.video_search = VideoSearch()
         self.report_service = ReportService(db)
         self.report_repo = ReportRepository(db)
+        self.video_repo = VideoRepository(db)
 
     def search_and_analyze_video(self, request: SearchRequest) -> SearchResponse:
         """
@@ -64,7 +68,23 @@ class VideoService:
 
         print(f"[VideoService] 검색 성공 -> ReportService로 분석 이동")
 
-        # [TODO]: AI 분석 전에 DB에 미리 값만 넣기
+        # 1-5. AI 분석 전에 DB에 미리 값만 넣기
+        # 이미 Video 테이블에 존재하는지 확인
+        existing_video = self.video_repo.get_video(search_result['video_id'])
+        
+        if not existing_video:
+            # 검색된 정보로 Video 객체 생성
+            new_video = Video(
+                video_id=search_result['video_id'],
+                video_title=search_result['title'],
+                channel=search_result['channel_title'],
+                youtube_url=search_result['url'],
+                thumbnail=search_result.get('thumbnail', None), # 아직 썸네일 저장은 미구현
+                status='PENDING'  # 분석 대기 상태
+            )
+            # DB 저장
+            self.video_repo.create_video(new_video)
+            print(f"[VideoService] 신규 영상 정보 저장 완료: {search_result['title']} (PENDING)")
 
         # 2. report_service.py 호출
         # Video 도메인의 데이터를 Report 도메인의 스키마로 변환하여 전달
