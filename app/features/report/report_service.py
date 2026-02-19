@@ -1,18 +1,23 @@
 #from app.ai.supervisor import build_graph
 from app.features.report.report_schema import AnalysisRequest, AnalysisResult
+
 import httpx
-# [TODO]: DB 저장
-# from app.features.report.report_repository import ReportRepository
+import uuid
+from sqlalchemy.orm import Session
+
+# DB 저장용 
+from app.features.report.report_repository import ReportRepository
+from app.features.report.report_model import AIReport, ReportEvidence
 
 class ReportService:
     """
     AI 에이전트를 활용하여 분석 및 리포트 생성
     """
 
-    def __init__(self):
+    def __init__(self, db: Session):
         # 그래프 초기화. 더이상 안쓴다 
         #self.ai_graph = build_graph()
-        # self.report_repo = ReportRepository()
+        self.report_repo = ReportRepository(db)
         pass
 
 
@@ -91,6 +96,43 @@ class ReportService:
             short_report=None,
             error=error_msg
         )
+    
+    def save_report_to_db(self, video_id: str, ai_result: dict) -> None:
+        try:
+            report_id = str(uuid.uuid4())
+            
+            # AIReport 엔티티 생성 및 저장
+            new_report = AIReport(
+                report_id=report_id,
+                video_id=video_id,
+                final_score=ai_result.get("final_score", 0.0),
+                fact_score=ai_result.get("fact", {}).get("fake_score", 0.0),
+                deepfake_score=ai_result.get("deepfake", {}).get("deepfake_ai_score", 0.0),
+                legal_issue_score=ai_result.get("legal", {}).get("legal_issue_score", 0.0),
+                analysis_result=ai_result.get("report", "")
+            )
+            self.report_repo.create_report(new_report)
+
+            # ReportEvidence 엔티티 생성 및 저장
+            def _save_evidence(category: str, evidence_list: list):
+                for content in evidence_list:
+                    new_evidence = ReportEvidence(
+                        evidence_id=str(uuid.uuid4()),
+                        report_id=report_id,
+                        category=category,
+                        content=content
+                    )
+                    self.report_repo.add_evidence(new_evidence)
+
+            _save_evidence("FACT", ai_result.get("fact", {}).get("fake_evidence", []))
+            _save_evidence("DEEPFAKE", ai_result.get("deepfake", {}).get("deepfake_ai_evidence", []))
+            _save_evidence("LEGAL", ai_result.get("legal", {}).get("legal_issue_evidence", []))
+            
+            print(f"[ReportService] DB 저장 성공: report_id={report_id}")
+            
+        except Exception as e:
+            raise RuntimeError(f"[ReportService] DB 저장 중 오류 발생: {e}")
+            # 필요에 따라 raise 처리 또는 무시 설정
 
 
     def analyze_video(self, request: AnalysisRequest) -> AnalysisResult:
@@ -119,6 +161,12 @@ class ReportService:
                 raise Exception(f"AI 서버 호출 실패: {response.status_code}")
                 
             ai_result = response.json()
+
+            # DB에 저장하기
+            if hasattr(request, "video_id"):
+                self.save_report_to_db(request.video_id, ai_result)
+            else:
+                print("[ReportService] 경고: AnalysisRequest에 video_id가 없어 DB에 저장할 수 없습니다.")
             return self.analysis_ai_result(ai_result)
 
         except Exception as e:

@@ -15,7 +15,7 @@ class VideoService:
 
     def __init__(self, db: Session):
         self.video_search = VideoSearch()
-        self.report_service = ReportService()
+        self.report_service = ReportService(db)
         self.report_repo = ReportRepository(db)
 
     def search_and_analyze_video(self, request: SearchRequest) -> SearchResponse:
@@ -71,6 +71,7 @@ class VideoService:
         try:
             analysis_request = AnalysisRequest(
                 youtube_url=search_result['url'],
+                video_id=search_result["video_id"]
             )
             
             analysis_result: AnalysisResult = self.report_service.analyze_video(analysis_request)
