@@ -24,9 +24,15 @@ class ReportService:
             # 증거가 있고 점수가 0.4 이상이면 1(위험), 아니면 0
             status = 1 if evidence and (score >= 0.4) else 0
             return score, status, evidence
+        
+        # 광고가 아니면 바로 반환
+        if not ai_result.get("is_ad", "True"):
+            return AnalysisResult(
+            final_risk_level = 9, # 광고가 아닌 경우는 9로 표시
+        )
 
         legal_score, legal_status, legal_evidence = check_risk("legal", "legal_issue_score", "legal_issue_evidence")
-        deepfake_score, deepfake_status, deepfake_evidence = check_risk("deepfake", "deepfake_score", "deepfake_evidence")
+        deepfake_score, deepfake_status, deepfake_evidence = check_risk("deepfake", "deepfake_ai_score", "deepfake_ai_evidence")
         fact_score, fact_status, fact_evidence = check_risk("fact", "fake_score", "fake_evidence")
 
         # danger_evidence : 일단 특정 점수 ( 0.6으로 우선 세팅 ) 넘기면 danger_evidence에 추가하도록 함
