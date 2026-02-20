@@ -26,7 +26,7 @@ class ReportService:
             return score, status, evidence
 
         legal_score, legal_status, legal_evidence = check_risk("legal", "legal_issue_score", "legal_issue_evidence")
-        deepfake_score, deepfake_status, deepfake_evidence = check_risk("deepfake", "deepfake_score", "deepfake_evidence")
+        deepfake_score, deepfake_status, deepfake_evidence = check_risk("deepfake", "deepfake_ai_score", "deepfake_ai_evidence")
         fact_score, fact_status, fact_evidence = check_risk("fact", "fake_score", "fake_evidence")
 
         # danger_evidence : 일단 특정 점수 ( 0.6으로 우선 세팅 ) 넘기면 danger_evidence에 추가하도록 함
@@ -50,13 +50,17 @@ class ReportService:
         else:
             short_report = "해당 영상은 분석 결과 위험한 영상일"
 
-        final_score = ai_result.get("final_score", 0.0) # default = 0.0
+        #final_score = ai_result.get("final_score", 0.0) # default = 0.0
+        # 세 부분 점수 중 최솟값만 제외하고 평균내어 최종 점수 계산
+        scores = [legal_score, deepfake_score, fact_score]
+        min_score = min(scores)
+        final_score = (sum(scores) - min_score) / 2
 
-        if final_score >= 0.7: # 0.7 이상 : 위험도 2  ( 높음 )
+        if final_score >= 0.65: # 0.7 이상 : 위험도 2  ( 높음 )
             final_status = 2
             short_report_result = short_report + " 확률이 매우 높아 위험합니다."  
 
-        elif final_score >= 0.3: # 0.3 이상 : 위험도 1 ( 중간 )
+        elif final_score >= 0.4: # 0.3 이상 : 위험도 1 ( 중간 )
             final_status = 1
             short_report_result = short_report + " 확률이 있어 주의가 필요합니다."
         else:
