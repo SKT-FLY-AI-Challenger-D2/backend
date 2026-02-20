@@ -1,6 +1,8 @@
 from sqlalchemy.orm import Session
 import re
 
+from app.core.database import SessionLocal
+
 from app.features.video.video_search import VideoSearch
 from app.features.video.video_schema import SearchRequest, SearchResponse
 
@@ -16,11 +18,16 @@ class VideoService:
     검색(video) -> DB 확인 -> 분석 요청(report) -> 결과 파싱 -> 알림(notification) 및 신고(complaint)
     """
 
-    def __init__(self, db: Session):
+    def __init__(self):
+        self.db: Session = SessionLocal()
+
         self.video_search = VideoSearch()
-        self.report_service = ReportService(db)
-        self.report_repo = ReportRepository(db)
-        self.video_repo = VideoRepository(db)
+        self.report_service = ReportService(self.db)
+        self.report_repo = ReportRepository(self.db)
+        self.video_repo = VideoRepository(self.db)
+
+    def close(self):
+        self.db.close()
 
     def search_and_analyze_video(self, request: SearchRequest) -> SearchResponse:
         """
@@ -37,9 +44,7 @@ class VideoService:
             ValueError: API KEY 에러
         """
         # 1. 입력받은 제목, 채널명으로 YouTube URL 검색 수행
-        req_channel = self._normalize_text(request.channel, add_blank=True)
-        req_title = self._normalize_text(request.title, add_blank=True)
-        query = f"{req_title} {req_channel}".strip() # 제목 + 채널명으로 검색 쿼리 만들기
+        query = f"{request.title} {request.channel}".strip() # 제목 + 채널명으로 검색 쿼리 만들기
         search_result = self.video_search.search_youtube(query) # 검색 수행
 
         # 1-2. 검색 실패 처리
@@ -53,16 +58,16 @@ class VideoService:
             )
 
         # 1-4. DB에 기존 데이터가 있는지 확인 후 있으면 바로 반환
-        previous_report = self.report_repo.get_report_by_video_id(video_id=search_result['video_id'])
+        previous_report: dict = self.report_service.get_existing_analysis(video_id=search_result['video_id'])
+        
         if previous_report:
-            # report_service에서 데이터 가공
-            processed_report: AnalysisResult = self.report_service.analysis_ai_result(previous_report)
-            if processed_report.error: # DB에 저장된 기존 분석에 오류 내용이 있을 시
-                raise RuntimeError(f"기존 DB 데이터 가공 실패: {processed_report.error}")
+            if previous_report.error: # DB에 저장된 기존 분석에 오류 내용이 있을 시
+                raise RuntimeError(f"기존 DB 데이터 가공 실패: {previous_report.error}")
             
+            print("[VideoService] DB에서 기존 분석 반환")
             return self._build_success_response(
                 search_result=search_result, 
-                analysis_data=processed_report, 
+                analysis_data=previous_report, 
                 message="DB에서 기존 분석 반환"
             )
 

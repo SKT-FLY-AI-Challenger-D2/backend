@@ -20,6 +20,47 @@ class ReportService:
         self.report_repo = ReportRepository(db)
         pass
 
+    def get_existing_analysis(self, video_id: str) -> dict:
+        """
+        DB에 기존 분석 결과가 있는지 확인하고, 
+        있다면 AI 서버가 응답하는 dict와 동일한 형태로 가공하여 반환
+        """
+        previous_report = self.report_repo.get_report_by_video_id(video_id=video_id)
+        
+        if not previous_report:
+            return None
+
+        # 연관된 Evidence 목록 가져오기
+        evidences = self.report_repo.get_evidence_by_report(report_id=previous_report.report_id)
+        
+        # 카테고리 별로 근거 내용 리스트 가져오기
+        legal_evidence = [e.content for e in evidences if e.category == "LEGAL"]
+        deepfake_evidence = [e.content for e in evidences if e.category == "DEEPFAKE"]
+        fact_evidence = [e.content for e in evidences if e.category == "FACT"]
+
+        # AI 서버 응답과 동일한 형태의 dict로 만들기
+        report_dict = {
+            "is_ad": True,
+            "legal": {
+                "legal_issue_score": float(previous_report.legal_issue_score),
+                "legal_issue_evidence": legal_evidence
+            },
+            "deepfake": {
+                "deepfake_ai_score": float(previous_report.deepfake_score),
+                "deepfake_ai_evidence": deepfake_evidence
+            },
+            "fact": {
+                "fake_score": float(previous_report.fact_score),
+                "fake_evidence": fact_evidence
+            },
+            "final_score": float(previous_report.final_score),
+            "report": previous_report.analysis_result
+        }
+        
+        print("[Report Service] 기존 분석 데이터 가공 완료")
+        
+        return self.analysis_ai_result(report_dict)
+
 
     def analysis_ai_result(self, ai_result: dict) -> AnalysisResult:
         def check_risk(category, score_key, evidence_key):
