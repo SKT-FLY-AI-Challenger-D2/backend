@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 import re
-import html
+import html # html 문법 정규화
+import difflib
 
 from app.core.database import SessionLocal
 
@@ -180,18 +181,27 @@ class VideoService:
             request (SearchRequest):    프론트엔드가 요청한 내용(영상 제목, 채널명)
             result (dict):              Youtube API로 찾은 내용(url, video_id, 영상 제목, 채널명)
         """
-        # 1. 채널명 검사
         req_channel = self._normalize_text(request.channel)
         res_channel = self._normalize_text(result['channel_title'])
         
-        if req_channel not in res_channel and res_channel not in req_channel:
-            return False 
-        
-        # 2. 제목 검사
         req_title = self._normalize_text(request.title)
         res_title = self._normalize_text(result['title'])
-        # 유사도가 임계값보다 낮으면 다른 영상으로 간주
-        if req_title not in res_title and res_title not in req_title:
+
+        # 1. 채널명 유사도 검사
+        channel_similarity = difflib.SequenceMatcher(None, req_channel, res_channel).ratio()
+
+        channel_match = (req_channel in res_channel) or (res_channel in req_channel) or (channel_similarity >= 0.9)
+        
+        if not channel_match:
+            return False 
+
+        # 2. 제목 유사도 검사
+        title_similarity = difflib.SequenceMatcher(None, req_title, res_title).ratio()
+        
+        title_match = (req_title in res_title) or (res_title in req_title) or (title_similarity >= 0.8)
+
+        print(channel_similarity, title_similarity)
+        if not title_match:
             return False
             
         return True
