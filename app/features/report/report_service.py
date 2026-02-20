@@ -26,7 +26,7 @@ class ReportService:
             return score, status, evidence
 
         legal_score, legal_status, legal_evidence = check_risk("legal", "legal_issue_score", "legal_issue_evidence")
-        deepfake_score, deepfake_status, deepfake_evidence = check_risk("deepfake", "deepfake_score", "deepfake_evidence")
+        deepfake_score, deepfake_status, deepfake_evidence = check_risk("deepfake", "deepfake_ai_score", "deepfake_ai_evidence")
         fact_score, fact_status, fact_evidence = check_risk("fact", "fake_score", "fake_evidence")
 
         # danger_evidence : 일단 특정 점수 ( 0.6으로 우선 세팅 ) 넘기면 danger_evidence에 추가하도록 함
