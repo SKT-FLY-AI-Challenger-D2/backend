@@ -138,9 +138,12 @@ class ReportService:
             error=error_msg
         )
     
+    
     def save_report_to_db(self, video_id: str, ai_result: dict) -> None:
         try:
             report_id = str(uuid.uuid4())
+            while self.report_repo.get_report_by_id(report_id):
+                report_id = str(uuid.uuid4())
             
             # 카테고리 데이터가 None으로 올 경우 빈 딕셔너리로 강제 변환하여 AttributeError 방지
             fact_data = ai_result.get("fact") or {}
@@ -157,7 +160,9 @@ class ReportService:
                 legal_issue_score=legal_data.get("legal_issue_score", 0.0),
                 analysis_result=ai_result.get("report", "")
             )
-            self.report_repo.create_report(new_report)
+            if not self.report_repo.create_report(new_report):
+                print(f"[ReportService] 데이터 저장 실패")
+                raise RuntimeError("AIReport DB 저장 실패")
 
             # ReportEvidence 엔티티 생성 및 저장
             def _save_evidence(category: str, evidence_list: list):
@@ -166,13 +171,19 @@ class ReportService:
                     return
                     
                 for content in evidence_list:
+                    evidence_id = str(uuid.uuid4())
+                    while self.report_repo.get_report_by_id(evidence_id):
+                        evidence_id = str(uuid.uuid4())
+
                     new_evidence = ReportEvidence(
-                        evidence_id=str(uuid.uuid4()),
+                        evidence_id=evidence_id,
                         report_id=report_id,
                         category=category,
                         content=content
                     )
-                    self.report_repo.add_evidence(new_evidence)
+                    if not self.report_repo.add_evidence(new_evidence):
+                        print(f"[ReportService] ReportEvidence DB 저장 실패")
+                        raise RuntimeError("ReportEvidence DB 저장 실패")
 
             _save_evidence("FACT", fact_data.get("fake_evidence", []))
             _save_evidence("DEEPFAKE", deepfake_data.get("deepfake_ai_evidence", []))

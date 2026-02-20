@@ -102,9 +102,9 @@ class VideoService:
 
         # 1-5. AI 분석 전에 DB에 미리 값만 넣기
         # 이미 Video 테이블에 존재하는지 확인
-        existing_video = self.video_repo.get_video(search_result['video_id'])
+        current_video = self.video_repo.get_video(search_result['video_id'])
         
-        if not existing_video:
+        if not current_video:
             # 검색된 정보로 Video 객체 생성
             new_video = Video(
                 video_id=search_result['video_id'],
@@ -115,8 +115,14 @@ class VideoService:
                 status='PENDING'  # 분석 대기 상태
             )
             # DB 저장
-            self.video_repo.create_video(new_video)
+            if not self.video_repo.create_video(new_video):
+                print(f"[VideoService] Video DB 저장 실패")
+                raise RuntimeError("Video DB 저장 실패")
             print(f"[VideoService] 신규 영상 정보 저장 완료: {search_result['title']} (PENDING)")
+            current_video = new_video
+        else: 
+            print("[VideoService] DB 이상")
+            raise RuntimeError("[VideoService] DB 이상")
 
         # 2. report_service.py 호출
         # Video 도메인의 데이터를 Report 도메인의 스키마로 변환하여 전달
@@ -135,17 +141,15 @@ class VideoService:
 
         # 3. 결과 통합 및 반환
         # 아까 저장한 Video 테이블의 객체의 state를 광고이면 HARMFUL, 광고가 아니면 SAFE로 분류하여 수정
-        saved_video = self.video_repo.get_video(search_result['video_id'])
-        
-        if saved_video:
+        if current_video:
             # report_service.py의 로직에 따라 광고가 아니면 final_risk_level이 9임
             if analysis_result.final_risk_level == 9:
-                saved_video.status = 'SAFE'
+                current_video.status = 'SAFE'
             else:
-                saved_video.status = 'HARMFUL'
+                current_video.status = 'HARMFUL'
                 
-            self.video_repo.update_video(saved_video)
-            print(f"[VideoService] 영상 상태 업데이트 완료: {saved_video.video_title} ({saved_video.status})")
+            self.video_repo.update_video(current_video)
+            print(f"[VideoService] 영상 상태 업데이트 완료: {current_video.video_title} ({current_video.status})")
 
         return self._build_success_response(
             search_result=search_result, 
