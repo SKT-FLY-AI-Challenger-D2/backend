@@ -20,7 +20,7 @@ class ReportService:
         self.report_repo = ReportRepository(db)
         pass
 
-    def get_existing_analysis(self, video_id: str) -> dict:
+    def get_existing_analysis(self, video_id: str) -> AnalysisResult | None:
         """
         DB에 기존 분석 결과가 있는지 확인하고, 
         있다면 AI 서버가 응답하는 dict와 동일한 형태로 가공하여 반환
@@ -40,7 +40,7 @@ class ReportService:
 
         # AI 서버 응답과 동일한 형태의 dict로 만들기
         report_dict = {
-            "is_ad": True,
+            "is_ad": True, # 광고가 아닌 경우는 안 들어온다고 가정
             "legal": {
                 "legal_issue_score": float(previous_report.legal_issue_score),
                 "legal_issue_evidence": legal_evidence
@@ -142,20 +142,29 @@ class ReportService:
         try:
             report_id = str(uuid.uuid4())
             
+            # 카테고리 데이터가 None으로 올 경우 빈 딕셔너리로 강제 변환하여 AttributeError 방지
+            fact_data = ai_result.get("fact") or {}
+            deepfake_data = ai_result.get("deepfake") or {}
+            legal_data = ai_result.get("legal") or {}
+            
             # AIReport 엔티티 생성 및 저장
             new_report = AIReport(
                 report_id=report_id,
                 video_id=video_id,
                 final_score=ai_result.get("final_score", 0.0),
-                fact_score=ai_result.get("fact", {}).get("fake_score", 0.0),
-                deepfake_score=ai_result.get("deepfake", {}).get("deepfake_ai_score", 0.0),
-                legal_issue_score=ai_result.get("legal", {}).get("legal_issue_score", 0.0),
+                fact_score=fact_data.get("fake_score", 0.0),
+                deepfake_score=deepfake_data.get("deepfake_ai_score", 0.0),
+                legal_issue_score=legal_data.get("legal_issue_score", 0.0),
                 analysis_result=ai_result.get("report", "")
             )
             self.report_repo.create_report(new_report)
 
             # ReportEvidence 엔티티 생성 및 저장
             def _save_evidence(category: str, evidence_list: list):
+                # evidence_list가 None이거나 비어있을 경우 스킵
+                if not evidence_list:
+                    return
+                    
                 for content in evidence_list:
                     new_evidence = ReportEvidence(
                         evidence_id=str(uuid.uuid4()),
@@ -165,15 +174,21 @@ class ReportService:
                     )
                     self.report_repo.add_evidence(new_evidence)
 
-            _save_evidence("FACT", ai_result.get("fact", {}).get("fake_evidence", []))
-            _save_evidence("DEEPFAKE", ai_result.get("deepfake", {}).get("deepfake_ai_evidence", []))
-            _save_evidence("LEGAL", ai_result.get("legal", {}).get("legal_issue_evidence", []))
+            _save_evidence("FACT", fact_data.get("fake_evidence", []))
+            _save_evidence("DEEPFAKE", deepfake_data.get("deepfake_ai_evidence", []))
+            _save_evidence("LEGAL", legal_data.get("legal_issue_evidence", []))
             
             print(f"[ReportService] DB 저장 성공: report_id={report_id}")
             
+        except AttributeError as e:
+            # 딕셔너리 파싱이나 데이터 타입이 예상과 달라 발생하는 오류
+            print(f"[ReportService] 데이터 구조 파싱 오류: {e}")
+            raise RuntimeError(f"AI 응답 데이터 형식이 올바르지 않아 DB 저장에 실패했습니다: {e}")
+            
         except Exception as e:
-            raise RuntimeError(f"[ReportService] DB 저장 중 오류 발생: {e}")
-            # 필요에 따라 raise 처리 또는 무시 설정
+            # SQLAlchemy DB 에러(IntegrityError 등) 및 기타 예기치 않은 오류
+            print(f"[ReportService] DB 저장 중 예외 발생: {e}")
+            raise RuntimeError(f"[ReportService] DB 처리 중 시스템 오류가 발생했습니다: {e}")
 
 
     def analyze_video(self, request: AnalysisRequest) -> AnalysisResult:

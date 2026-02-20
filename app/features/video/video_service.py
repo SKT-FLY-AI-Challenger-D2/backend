@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 import re
+import html
 
 from app.core.database import SessionLocal
 
@@ -11,7 +12,6 @@ from app.features.video.video_repository import VideoRepository
 
 from app.features.report.report_service import ReportService
 from app.features.report.report_schema import AnalysisRequest, AnalysisResult
-from app.features.report.report_repository import ReportRepository
 
 class VideoService:
     """
@@ -23,7 +23,6 @@ class VideoService:
 
         self.video_search = VideoSearch()
         self.report_service = ReportService(self.db)
-        self.report_repo = ReportRepository(self.db)
         self.video_repo = VideoRepository(self.db)
 
     def close(self):
@@ -46,19 +45,47 @@ class VideoService:
         # 1. 입력받은 제목, 채널명으로 YouTube URL 검색 수행
         query = f"{request.title} {request.channel}".strip() # 제목 + 채널명으로 검색 쿼리 만들기
         search_result = self.video_search.search_youtube(query) # 검색 수행
+        # # 더미 데이터
+        # search_result = {
+        #     'video_id': 'rA5Mt_XdoSQ', 
+        #     'title': '[무한도전] 왔다 내 도파민🤑 돈으로도 못 사는 무한도전 표 명품 티키타카 모음.zip | 무한도전⏱오분순삭 MBC070915방송', 
+        #     'channel_title': '오분순삭', 
+        #     'url': 'https://www.youtube.com/watch?v=rA5Mt_XdoSQ'
+        # }
+
 
         # 1-2. 검색 실패 처리
         if not search_result:
             raise RuntimeError("영상 검색에 실패했습니다.")
         
         # 1-3. 검색한 url의 제목, 채널명과 입력받은 제목, 채널 명이 다른 경우 분석하지 않고 반환
+        search_result['title'] = html.unescape(search_result['title'])
         if not self._is_video_match(request, search_result):
             raise RuntimeError(
                 f"검색 결과와 요청 내용이 다릅니다. (검색된 제목: {search_result['title']}, 채널명: {search_result['channel_title']})"
             )
 
         # 1-4. DB에 기존 데이터가 있는지 확인 후 있으면 바로 반환
-        previous_report: dict = self.report_service.get_existing_analysis(video_id=search_result['video_id'])
+        # 광고가 아닌 경우는 바로 반환
+        video = self.video_repo.get_video(video_id=search_result['video_id'])
+        
+        if (video and video.status == 'SAFE'):
+            return SearchResponse(
+            video_id=search_result['video_id'],
+            youtube_url=search_result['url'],
+            title=search_result['title'],
+            channel_title=search_result['channel_title'],
+            found=True,
+            error=None,
+            message="DB에서 기존 분석 광고 아님 반환",
+            
+            final_score=0.0,
+            final_risk_level=9,
+            danger_evidence=[],
+            analysis_report="",
+            short_report=""
+        )
+        previous_report: AnalysisResult = self.report_service.get_existing_analysis(video_id=search_result['video_id'])
         
         if previous_report:
             if previous_report.error: # DB에 저장된 기존 분석에 오류 내용이 있을 시
@@ -107,6 +134,19 @@ class VideoService:
             raise RuntimeError(f"분석 과정 중 오류: {analysis_result.error}")
 
         # 3. 결과 통합 및 반환
+        # 아까 저장한 Video 테이블의 객체의 state를 광고이면 HARMFUL, 광고가 아니면 SAFE로 분류하여 수정
+        saved_video = self.video_repo.get_video(search_result['video_id'])
+        
+        if saved_video:
+            # report_service.py의 로직에 따라 광고가 아니면 final_risk_level이 9임
+            if analysis_result.final_risk_level == 9:
+                saved_video.status = 'SAFE'
+            else:
+                saved_video.status = 'HARMFUL'
+                
+            self.video_repo.update_video(saved_video)
+            print(f"[VideoService] 영상 상태 업데이트 완료: {saved_video.video_title} ({saved_video.status})")
+
         return self._build_success_response(
             search_result=search_result, 
             analysis_data=analysis_result, 
@@ -122,6 +162,9 @@ class VideoService:
         """
         if not text:
             return ""
+        
+        # HTML 엔티티를 실제 문자로 변환
+        text = html.unescape(text)
         
         return re.sub(r'[^\w]', ' ' if add_blank else '', text).lower()
 
