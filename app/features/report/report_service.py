@@ -65,12 +65,18 @@ class ReportService:
     def analysis_ai_result(self, ai_result: dict) -> AnalysisResult:
         def check_risk(category, score_key, evidence_key):
             data = ai_result.get(category, {})
+            if data is None:
+                return 0.0, 0, []
             score = data.get(score_key, 0.0)
             evidence = data.get(evidence_key, [])
             # 증거가 있고 점수가 0.4 이상이면 1(위험), 아니면 0
             status = 1 if evidence and (score >= 0.4) else 0
             return score, status, evidence
         
+        
+        if ai_result is None:
+            print("[Report Service] ai_result가 None입니다.")
+            raise RuntimeError("[Report Service] ai_result가 None입니다.")
         # 광고가 아니면 바로 반환
         if not ai_result.get("is_ad", "True"):
             return AnalysisResult(
@@ -104,15 +110,15 @@ class ReportService:
 
         final_score = ai_result.get("final_score", 0.0) # default = 0.0
 
-        if final_score >= 0.7: # 0.7 이상 : 위험도 2  ( 높음 )
+        if final_score >= 0.65: # 0.65 이상 : 위험도 2  ( 높음 )
             final_status = 2
             short_report_result = short_report + " 확률이 매우 높아 위험합니다."  
 
-        elif final_score >= 0.3: # 0.3 이상 : 위험도 1 ( 중간 )
+        elif final_score >= 0.4: # 0.4 이상 : 위험도 1 ( 중간 )
             final_status = 1
             short_report_result = short_report + " 확률이 있어 주의가 필요합니다."
         else:
-            final_status = 0 # 0.3 미만 : 위험도 0 ( 낮음 )
+            final_status = 0 # 0.4 미만 : 위험도 0 ( 낮음 )
             short_report_result = "해당 영상은 안전한 영상일 확률이 높습니다."
 
         analysis_report = ai_result.get("report", "") # 보고서용 긴 글.
@@ -225,6 +231,7 @@ class ReportService:
             
 
             if response.status_code != 200:
+                print(f"AI 서버 호출 실패: {response.status_code}")
                 raise Exception(f"AI 서버 호출 실패: {response.status_code}")
                 
             ai_result = response.json()

@@ -44,7 +44,10 @@ class VideoService:
             ValueError: API KEY 에러
         """
         # 1. 입력받은 제목, 채널명으로 YouTube URL 검색 수행
+        print("[Video Service] 영상 검색 시작")
+
         query = f"{request.title} {request.channel}".strip() # 제목 + 채널명으로 검색 쿼리 만들기
+        query = re.sub(r'[|&"\-\(\)]', ' ', query) # 검색 명령어로 쓰이는 특수문자 지우기
         search_result = self.video_search.search_youtube(query) # 검색 수행
         # # 더미 데이터
         # search_result = {
@@ -57,17 +60,24 @@ class VideoService:
 
         # 1-2. 검색 실패 처리
         if not search_result:
+            print("[Video Service] 영상 검색에 실패했습니다.")
             raise RuntimeError("영상 검색에 실패했습니다.")
         
         # 1-3. 검색한 url의 제목, 채널명과 입력받은 제목, 채널 명이 다른 경우 분석하지 않고 반환
+        print("[Video Service] 검색 완료, 비교 중")
         search_result['title'] = html.unescape(search_result['title'])
         if not self._is_video_match(request, search_result):
+            print(
+                f"[Video Service] 검색 결과와 요청 내용이 다릅니다. (검색된 제목: {search_result['title']}, 채널명: {search_result['channel_title']})"
+            )
             raise RuntimeError(
                 f"검색 결과와 요청 내용이 다릅니다. (검색된 제목: {search_result['title']}, 채널명: {search_result['channel_title']})"
             )
 
+        print("[Video Service] 기존 비디오 DB 확인 시작")
         # 1-4. DB에 기존 데이터가 있는지 확인 후 있으면 바로 반환
         # 광고가 아닌 경우는 바로 반환
+        
         video = self.video_repo.get_video(video_id=search_result['video_id'])
         
         if (video and video.status == 'SAFE'):
@@ -90,6 +100,7 @@ class VideoService:
         
         if previous_report:
             if previous_report.error: # DB에 저장된 기존 분석에 오류 내용이 있을 시
+                print(f"기존 DB 데이터 가공 실패: {previous_report.error}")
                 raise RuntimeError(f"기존 DB 데이터 가공 실패: {previous_report.error}")
             
             print("[VideoService] DB에서 기존 분석 반환")
@@ -135,9 +146,11 @@ class VideoService:
             
             analysis_result: AnalysisResult = self.report_service.analyze_video(analysis_request)
         except Exception as e: # report_service.py 과정에서 오류 발생 시
+            print(f"[Video Service] 분석 서비스 요청 오류: {str(e)}")
             raise RuntimeError(f"분석 서비스 요청 오류: {str(e)}") from e
 
         if analysis_result.error:
+            print(f"[Video Service] 분석 과정 중 오류: {analysis_result.error}")
             raise RuntimeError(f"분석 과정 중 오류: {analysis_result.error}")
 
         # 3. 결과 통합 및 반환
@@ -200,7 +213,6 @@ class VideoService:
         
         title_match = (req_title in res_title) or (res_title in req_title) or (title_similarity >= 0.8)
 
-        print(channel_similarity, title_similarity)
         if not title_match:
             return False
             
