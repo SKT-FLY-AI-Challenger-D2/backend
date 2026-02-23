@@ -80,36 +80,39 @@ class VideoService:
         
         video = self.video_repo.get_video(video_id=search_result['video_id'])
         
-        if (video and video.status == 'SAFE'):
-            return SearchResponse(
-            video_id=search_result['video_id'],
-            youtube_url=search_result['url'],
-            title=search_result['title'],
-            channel_title=search_result['channel_title'],
-            found=True,
-            error=None,
-            message="DB에서 기존 분석 광고 아님 반환",
-            
-            final_score=0.0,
-            final_risk_level=9,
-            danger_evidence=[],
-            analysis_report="",
-            short_report=""
-        )
-        previous_report: AnalysisResult = self.report_service.get_existing_analysis(video_id=search_result['video_id'])
-        
-        if previous_report:
-            if previous_report.error: # DB에 저장된 기존 분석에 오류 내용이 있을 시
-                print(f"기존 DB 데이터 가공 실패: {previous_report.error}")
-                raise RuntimeError(f"기존 DB 데이터 가공 실패: {previous_report.error}")
-            
-            print("[VideoService] DB에서 기존 분석 반환")
-            return self._build_success_response(
-                search_result=search_result, 
-                analysis_data=previous_report, 
-                message="DB에서 기존 분석 반환"
-            )
+        if video:
+            if video.status == 'SAFE':
+                return SearchResponse(
+                    video_id=search_result['video_id'],
+                    youtube_url=search_result['url'],
+                    title=search_result['title'],
+                    channel_title=search_result['channel_title'],
+                    found=True,
+                    error=None,
+                    message="DB에서 기존 분석 광고 아님 반환",
+                    
+                    final_score=0.0,
+                    final_risk_level=9,
+                    danger_evidence=[],
+                    analysis_report="",
+                    short_report=""
+                )
+            elif video.status == 'HARMFUL':
+                previous_report: AnalysisResult = self.report_service.get_existing_analysis(video_id=search_result['video_id'])
+                
+                if previous_report:
+                    if previous_report.error: # DB에 저장된 기존 분석에 오류 내용이 있을 시
+                        print(f"기존 DB 데이터 가공 실패: {previous_report.error}")
+                        raise RuntimeError(f"기존 DB 데이터 가공 실패: {previous_report.error}")
+                    
+                    print("[VideoService] DB에서 기존 분석 반환")
+                    return self._build_success_response(
+                        search_result=search_result, 
+                        analysis_data=previous_report, 
+                        message="DB에서 기존 분석 반환"
+                    )
 
+        # vide가 없거나 video.status == 'PENDING'이거나, previous_report가 없거나 => AI 서버 호출
         print(f"[VideoService] 검색 성공 -> ReportService로 분석 이동")
 
         # 1-5. AI 분석 전에 DB에 미리 값만 넣기
@@ -132,8 +135,10 @@ class VideoService:
                 raise RuntimeError("Video DB 저장 실패")
             print(f"[VideoService] 신규 영상 정보 저장 완료: {search_result['title']} (PENDING)")
             current_video = new_video
+        elif current_video.status == 'PENDING': # 기존 AI 분석 시 오류로 중단되었을 경우
+            pass # TODO 원래는 분석을 기다려야 함
         else: 
-            print("[VideoService] DB 이상")
+            print(f"[VideoService] DB 이상, current_video.status:", current_video.status)
             raise RuntimeError("[VideoService] DB 이상")
 
         # 2. report_service.py 호출
@@ -150,6 +155,7 @@ class VideoService:
             raise RuntimeError(f"분석 서비스 요청 오류: {str(e)}") from e
 
         if analysis_result.error:
+            # TODO: AI 분석 중 오류 발생 시 current_video.status 수정해야 함
             print(f"[Video Service] 분석 과정 중 오류: {analysis_result.error}")
             raise RuntimeError(f"분석 과정 중 오류: {analysis_result.error}")
 
