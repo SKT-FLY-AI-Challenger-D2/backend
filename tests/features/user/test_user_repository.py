@@ -2,6 +2,15 @@ import pytest
 from app.features.user.user_repository import UserRepository
 from app.features.user.user_model import User, UserYoutube, ParentChild
 
+# [테스트 목적] UserRepository의 User CRUD 동작 검증
+# [테스트 방식] 인메모리 SQLite DB + Repository 메서드 호출
+# [테스트 동작]
+#   1. create_user → user_id 일치 assert
+#   2. get_user_by_email → name 일치 assert
+#   3. update_user (name 변경) → 변경된 name assert
+#   4. delete_user → get_user_by_id → None assert
+# [Input] User(user_id="u1", name="테스트", user_email="t@t.com", sex="M")
+# [Output] CRUD 각 단계 정상 동작, 삭제 후 None
 def test_user_crud(db_session):
     repo = UserRepository(db_session)
 
@@ -24,6 +33,14 @@ def test_user_crud(db_session):
     repo.delete_user("u1")
     assert repo.get_user_by_id("u1") is None
 
+# [테스트 목적] UserRepository의 유튜브 계정 추가 + 부모-자녀 관계 메서드 검증
+# [테스트 방식] 인메모리 SQLite DB + Repository 메서드 호출
+# [테스트 동작]
+#   1. create_user로 부모/자녀 User 2명 생성
+#   2. add_youtube_account → get_youtube_accounts_by_user → 1건, nickname 일치 assert
+#   3. add_parent_child → get_children → 1건, child_user_id 일치 assert
+# [Input] User 2명("dad", "son") + UserYoutube(youtube_account_id="yt_1") + ParentChild
+# [Output] 유튜브 계정 1건 + nickname "아빠TV", 자녀 1건 + child_user_id "son"
 def test_user_relations(db_session):
     repo = UserRepository(db_session)
     

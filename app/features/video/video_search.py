@@ -49,6 +49,8 @@ class VideoSearch:
             }
 
         except HttpError as e:
+            print(f"[Video Search] 영상 검색 Youtube API 호출 중 HTTP 오류: {e}")
             raise RuntimeError(f"영상 검색 Youtube API 호출 중 HTTP 오류: {e}")
         except Exception as e:
+            print(f"[Video Search] 영상 검색 중 알 수 없는 오류: {e}")
             raise RuntimeError(f"영상 검색 중 알 수 없는 오류: {e}")
