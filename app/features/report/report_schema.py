@@ -6,6 +6,7 @@ class AnalysisRequest(BaseModel):
     AI 분석 요청 스키마
     """
     youtube_url: str
+    video_id: str
 
 class AnalysisResult(BaseModel):
     """
