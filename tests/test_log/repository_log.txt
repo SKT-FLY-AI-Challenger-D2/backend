@@ -1,0 +1,2646 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.11.14, pytest-9.0.2, pluggy-1.6.0 -- /Users/ljaejun/Project/SKT FLY AI/temp/backend/venv/bin/python3.11
+cachedir: .pytest_cache
+rootdir: /Users/ljaejun/Project/SKT FLY AI/temp/backend
+plugins: anyio-4.12.1
+collecting ... collected 13 items
+
+tests/features/complaint/test_complaint_model.py::test_complaint_flow 2026-02-10 17:04:08,835 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,835 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("complaints")
+2026-02-10 17:04:08,835 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,835 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("complaints")
+2026-02-10 17:04:08,835 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,836 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("videos")
+2026-02-10 17:04:08,836 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,836 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("videos")
+2026-02-10 17:04:08,836 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,836 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("watch_history")
+2026-02-10 17:04:08,836 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,836 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("watch_history")
+2026-02-10 17:04:08,836 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,836 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("ai_reports")
+2026-02-10 17:04:08,836 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,836 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("ai_reports")
+2026-02-10 17:04:08,836 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,836 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("users")
+2026-02-10 17:04:08,836 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,836 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("users")
+2026-02-10 17:04:08,836 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,836 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("user_youtubes")
+2026-02-10 17:04:08,836 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,836 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("user_youtubes")
+2026-02-10 17:04:08,836 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,836 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("parent_child")
+2026-02-10 17:04:08,836 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,836 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("parent_child")
+2026-02-10 17:04:08,836 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,836 INFO sqlalchemy.engine.Engine 
+CREATE TABLE videos (
+	video_id VARCHAR(255) NOT NULL, 
+	video_title VARCHAR(255), 
+	channel VARCHAR(255), 
+	upload_date DATETIME, 
+	video_script TEXT, 
+	video_runtime INTEGER, 
+	thumbnail VARCHAR(500), 
+	youtube_url VARCHAR(500), 
+	saved_url VARCHAR(500), 
+	status VARCHAR(20), 
+	PRIMARY KEY (video_id), 
+	CONSTRAINT chk_video_status CHECK (status IN ('SAFE', 'HARMFUL', 'PENDING'))
+)
+
+
+2026-02-10 17:04:08,836 INFO sqlalchemy.engine.Engine [no key 0.00003s] ()
+2026-02-10 17:04:08,837 INFO sqlalchemy.engine.Engine 
+CREATE TABLE users (
+	user_id VARCHAR(255) NOT NULL, 
+	password VARCHAR(255) NOT NULL, 
+	name VARCHAR(100) NOT NULL, 
+	sex VARCHAR(10), 
+	birth_date DATE, 
+	created_at DATETIME, 
+	user_email VARCHAR(255) NOT NULL, 
+	PRIMARY KEY (user_id), 
+	CONSTRAINT chk_sex CHECK (sex IN ('M', 'F')), 
+	UNIQUE (user_email)
+)
+
+
+2026-02-10 17:04:08,837 INFO sqlalchemy.engine.Engine [no key 0.00003s] ()
+2026-02-10 17:04:08,837 INFO sqlalchemy.engine.Engine 
+CREATE TABLE watch_history (
+	history_id VARCHAR(255) NOT NULL, 
+	user_id VARCHAR(255) NOT NULL, 
+	video_id VARCHAR(255) NOT NULL, 
+	watched_at DATETIME, 
+	PRIMARY KEY (history_id), 
+	FOREIGN KEY(user_id) REFERENCES users (user_id) ON DELETE CASCADE, 
+	FOREIGN KEY(video_id) REFERENCES videos (video_id) ON DELETE CASCADE
+)
+
+
+2026-02-10 17:04:08,837 INFO sqlalchemy.engine.Engine [no key 0.00003s] ()
+2026-02-10 17:04:08,837 INFO sqlalchemy.engine.Engine CREATE INDEX idx_watch_time ON watch_history (watched_at)
+2026-02-10 17:04:08,837 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,837 INFO sqlalchemy.engine.Engine CREATE INDEX idx_watch_video ON watch_history (video_id)
+2026-02-10 17:04:08,837 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,837 INFO sqlalchemy.engine.Engine CREATE INDEX idx_watch_user ON watch_history (user_id)
+2026-02-10 17:04:08,837 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,837 INFO sqlalchemy.engine.Engine 
+CREATE TABLE ai_reports (
+	report_id VARCHAR(255) NOT NULL, 
+	video_id VARCHAR(255) NOT NULL, 
+	legal_report TEXT, 
+	fact_report TEXT, 
+	is_generated_by TEXT, 
+	summary TEXT, 
+	created_at DATETIME, 
+	PRIMARY KEY (report_id), 
+	UNIQUE (video_id), 
+	FOREIGN KEY(video_id) REFERENCES videos (video_id) ON DELETE CASCADE
+)
+
+
+2026-02-10 17:04:08,837 INFO sqlalchemy.engine.Engine [no key 0.00003s] ()
+2026-02-10 17:04:08,837 INFO sqlalchemy.engine.Engine 
+CREATE TABLE user_youtubes (
+	youtube_account_id VARCHAR(255) NOT NULL, 
+	youtube_email VARCHAR(255), 
+	youtube_nickname VARCHAR(255), 
+	user_id VARCHAR(255) NOT NULL, 
+	PRIMARY KEY (youtube_account_id), 
+	UNIQUE (youtube_email), 
+	FOREIGN KEY(user_id) REFERENCES users (user_id) ON DELETE CASCADE
+)
+
+
+2026-02-10 17:04:08,837 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,837 INFO sqlalchemy.engine.Engine 
+CREATE TABLE parent_child (
+	parent_user_id VARCHAR(255) NOT NULL, 
+	child_user_id VARCHAR(255) NOT NULL, 
+	PRIMARY KEY (parent_user_id, child_user_id), 
+	FOREIGN KEY(parent_user_id) REFERENCES users (user_id) ON DELETE CASCADE, 
+	FOREIGN KEY(child_user_id) REFERENCES users (user_id) ON DELETE CASCADE
+)
+
+
+2026-02-10 17:04:08,838 INFO sqlalchemy.engine.Engine [no key 0.00003s] ()
+2026-02-10 17:04:08,838 INFO sqlalchemy.engine.Engine 
+CREATE TABLE complaints (
+	complaint_id VARCHAR(255) NOT NULL, 
+	video_id VARCHAR(255) NOT NULL, 
+	report_id VARCHAR(255), 
+	complaint_date DATETIME, 
+	complaint_content TEXT, 
+	complaint_target VARCHAR(255), 
+	PRIMARY KEY (complaint_id), 
+	FOREIGN KEY(video_id) REFERENCES videos (video_id) ON DELETE CASCADE, 
+	FOREIGN KEY(report_id) REFERENCES ai_reports (report_id) ON DELETE SET NULL
+)
+
+
+2026-02-10 17:04:08,838 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,838 INFO sqlalchemy.engine.Engine COMMIT
+2026-02-10 17:04:08,839 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,840 INFO sqlalchemy.engine.Engine INSERT INTO videos (video_id, video_title, channel, upload_date, video_script, video_runtime, thumbnail, youtube_url, saved_url, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-10 17:04:08,840 INFO sqlalchemy.engine.Engine [generated in 0.00007s] ('v_comp', '나쁜 영상', None, None, None, None, None, None, None, 'HARMFUL')
+2026-02-10 17:04:08,840 INFO sqlalchemy.engine.Engine COMMIT
+2026-02-10 17:04:08,840 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,841 INFO sqlalchemy.engine.Engine INSERT INTO complaints (complaint_id, video_id, report_id, complaint_date, complaint_content, complaint_target) VALUES (?, ?, ?, CURRENT_TIMESTAMP, ?, ?) RETURNING complaint_date
+2026-02-10 17:04:08,841 INFO sqlalchemy.engine.Engine [generated in 0.00005s] ('c_1', 'v_comp', None, '이 영상 사기 같아요!', '경찰청')
+2026-02-10 17:04:08,841 INFO sqlalchemy.engine.Engine COMMIT
+2026-02-10 17:04:08,841 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,841 INFO sqlalchemy.engine.Engine SELECT complaints.complaint_id AS complaints_complaint_id, complaints.video_id AS complaints_video_id, complaints.report_id AS complaints_report_id, complaints.complaint_date AS complaints_complaint_date, complaints.complaint_content AS complaints_complaint_content, complaints.complaint_target AS complaints_complaint_target 
+FROM complaints
+ LIMIT ? OFFSET ?
+2026-02-10 17:04:08,841 INFO sqlalchemy.engine.Engine [generated in 0.00004s] (1, 0)
+2026-02-10 17:04:08,842 INFO sqlalchemy.engine.Engine DELETE FROM complaints WHERE complaints.complaint_id = ?
+2026-02-10 17:04:08,842 INFO sqlalchemy.engine.Engine [generated in 0.00005s] ('c_1',)
+2026-02-10 17:04:08,842 INFO sqlalchemy.engine.Engine COMMIT
+PASSED2026-02-10 17:04:08,842 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,842 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("complaints")
+2026-02-10 17:04:08,842 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,842 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("videos")
+2026-02-10 17:04:08,842 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,842 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("watch_history")
+2026-02-10 17:04:08,842 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,842 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("ai_reports")
+2026-02-10 17:04:08,842 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,842 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("users")
+2026-02-10 17:04:08,842 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,842 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("user_youtubes")
+2026-02-10 17:04:08,842 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,842 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("parent_child")
+2026-02-10 17:04:08,842 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,843 INFO sqlalchemy.engine.Engine 
+DROP TABLE complaints
+2026-02-10 17:04:08,843 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,843 INFO sqlalchemy.engine.Engine 
+DROP TABLE parent_child
+2026-02-10 17:04:08,843 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,843 INFO sqlalchemy.engine.Engine 
+DROP TABLE user_youtubes
+2026-02-10 17:04:08,843 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,843 INFO sqlalchemy.engine.Engine 
+DROP TABLE ai_reports
+2026-02-10 17:04:08,843 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,843 INFO sqlalchemy.engine.Engine 
+DROP TABLE watch_history
+2026-02-10 17:04:08,843 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,843 INFO sqlalchemy.engine.Engine 
+DROP TABLE users
+2026-02-10 17:04:08,843 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,843 INFO sqlalchemy.engine.Engine 
+DROP TABLE videos
+2026-02-10 17:04:08,843 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,843 INFO sqlalchemy.engine.Engine COMMIT
+
+tests/features/complaint/test_complaint_repository.py::test_complaint_crud 2026-02-10 17:04:08,843 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,843 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("complaints")
+2026-02-10 17:04:08,843 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,843 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("complaints")
+2026-02-10 17:04:08,843 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,843 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("videos")
+2026-02-10 17:04:08,843 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,843 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("videos")
+2026-02-10 17:04:08,843 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,843 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("watch_history")
+2026-02-10 17:04:08,844 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,844 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("watch_history")
+2026-02-10 17:04:08,844 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,844 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("ai_reports")
+2026-02-10 17:04:08,844 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,844 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("ai_reports")
+2026-02-10 17:04:08,844 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,844 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("users")
+2026-02-10 17:04:08,844 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,844 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("users")
+2026-02-10 17:04:08,844 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,844 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("user_youtubes")
+2026-02-10 17:04:08,844 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,844 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("user_youtubes")
+2026-02-10 17:04:08,844 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,844 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("parent_child")
+2026-02-10 17:04:08,844 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,844 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("parent_child")
+2026-02-10 17:04:08,844 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,844 INFO sqlalchemy.engine.Engine 
+CREATE TABLE videos (
+	video_id VARCHAR(255) NOT NULL, 
+	video_title VARCHAR(255), 
+	channel VARCHAR(255), 
+	upload_date DATETIME, 
+	video_script TEXT, 
+	video_runtime INTEGER, 
+	thumbnail VARCHAR(500), 
+	youtube_url VARCHAR(500), 
+	saved_url VARCHAR(500), 
+	status VARCHAR(20), 
+	PRIMARY KEY (video_id), 
+	CONSTRAINT chk_video_status CHECK (status IN ('SAFE', 'HARMFUL', 'PENDING'))
+)
+
+
+2026-02-10 17:04:08,844 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,844 INFO sqlalchemy.engine.Engine 
+CREATE TABLE users (
+	user_id VARCHAR(255) NOT NULL, 
+	password VARCHAR(255) NOT NULL, 
+	name VARCHAR(100) NOT NULL, 
+	sex VARCHAR(10), 
+	birth_date DATE, 
+	created_at DATETIME, 
+	user_email VARCHAR(255) NOT NULL, 
+	PRIMARY KEY (user_id), 
+	CONSTRAINT chk_sex CHECK (sex IN ('M', 'F')), 
+	UNIQUE (user_email)
+)
+
+
+2026-02-10 17:04:08,844 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,844 INFO sqlalchemy.engine.Engine 
+CREATE TABLE watch_history (
+	history_id VARCHAR(255) NOT NULL, 
+	user_id VARCHAR(255) NOT NULL, 
+	video_id VARCHAR(255) NOT NULL, 
+	watched_at DATETIME, 
+	PRIMARY KEY (history_id), 
+	FOREIGN KEY(user_id) REFERENCES users (user_id) ON DELETE CASCADE, 
+	FOREIGN KEY(video_id) REFERENCES videos (video_id) ON DELETE CASCADE
+)
+
+
+2026-02-10 17:04:08,844 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,844 INFO sqlalchemy.engine.Engine CREATE INDEX idx_watch_time ON watch_history (watched_at)
+2026-02-10 17:04:08,844 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,844 INFO sqlalchemy.engine.Engine CREATE INDEX idx_watch_video ON watch_history (video_id)
+2026-02-10 17:04:08,844 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,845 INFO sqlalchemy.engine.Engine CREATE INDEX idx_watch_user ON watch_history (user_id)
+2026-02-10 17:04:08,845 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,845 INFO sqlalchemy.engine.Engine 
+CREATE TABLE ai_reports (
+	report_id VARCHAR(255) NOT NULL, 
+	video_id VARCHAR(255) NOT NULL, 
+	legal_report TEXT, 
+	fact_report TEXT, 
+	is_generated_by TEXT, 
+	summary TEXT, 
+	created_at DATETIME, 
+	PRIMARY KEY (report_id), 
+	UNIQUE (video_id), 
+	FOREIGN KEY(video_id) REFERENCES videos (video_id) ON DELETE CASCADE
+)
+
+
+2026-02-10 17:04:08,845 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,845 INFO sqlalchemy.engine.Engine 
+CREATE TABLE user_youtubes (
+	youtube_account_id VARCHAR(255) NOT NULL, 
+	youtube_email VARCHAR(255), 
+	youtube_nickname VARCHAR(255), 
+	user_id VARCHAR(255) NOT NULL, 
+	PRIMARY KEY (youtube_account_id), 
+	UNIQUE (youtube_email), 
+	FOREIGN KEY(user_id) REFERENCES users (user_id) ON DELETE CASCADE
+)
+
+
+2026-02-10 17:04:08,845 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,845 INFO sqlalchemy.engine.Engine 
+CREATE TABLE parent_child (
+	parent_user_id VARCHAR(255) NOT NULL, 
+	child_user_id VARCHAR(255) NOT NULL, 
+	PRIMARY KEY (parent_user_id, child_user_id), 
+	FOREIGN KEY(parent_user_id) REFERENCES users (user_id) ON DELETE CASCADE, 
+	FOREIGN KEY(child_user_id) REFERENCES users (user_id) ON DELETE CASCADE
+)
+
+
+2026-02-10 17:04:08,845 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,845 INFO sqlalchemy.engine.Engine 
+CREATE TABLE complaints (
+	complaint_id VARCHAR(255) NOT NULL, 
+	video_id VARCHAR(255) NOT NULL, 
+	report_id VARCHAR(255), 
+	complaint_date DATETIME, 
+	complaint_content TEXT, 
+	complaint_target VARCHAR(255), 
+	PRIMARY KEY (complaint_id), 
+	FOREIGN KEY(video_id) REFERENCES videos (video_id) ON DELETE CASCADE, 
+	FOREIGN KEY(report_id) REFERENCES ai_reports (report_id) ON DELETE SET NULL
+)
+
+
+2026-02-10 17:04:08,845 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,845 INFO sqlalchemy.engine.Engine COMMIT
+2026-02-10 17:04:08,845 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,845 INFO sqlalchemy.engine.Engine INSERT INTO videos (video_id, video_title, channel, upload_date, video_script, video_runtime, thumbnail, youtube_url, saved_url, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-10 17:04:08,845 INFO sqlalchemy.engine.Engine [cached since 0.005492s ago] ('v_bad', '나쁜영상', None, None, None, None, None, None, None, 'HARMFUL')
+2026-02-10 17:04:08,845 INFO sqlalchemy.engine.Engine COMMIT
+2026-02-10 17:04:08,846 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,846 INFO sqlalchemy.engine.Engine SELECT videos.video_id, videos.video_title, videos.channel, videos.upload_date, videos.video_script, videos.video_runtime, videos.thumbnail, videos.youtube_url, videos.saved_url, videos.status 
+FROM videos 
+WHERE videos.video_id = ?
+2026-02-10 17:04:08,846 INFO sqlalchemy.engine.Engine [generated in 0.00004s] ('v_bad',)
+2026-02-10 17:04:08,846 INFO sqlalchemy.engine.Engine INSERT INTO complaints (complaint_id, video_id, report_id, complaint_date, complaint_content, complaint_target) VALUES (?, ?, ?, CURRENT_TIMESTAMP, ?, ?) RETURNING complaint_date
+2026-02-10 17:04:08,846 INFO sqlalchemy.engine.Engine [cached since 0.005678s ago] ('c1', 'v_bad', None, '사기 영상입니다.', 'Platform')
+2026-02-10 17:04:08,846 INFO sqlalchemy.engine.Engine COMMIT
+2026-02-10 17:04:08,846 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,847 INFO sqlalchemy.engine.Engine SELECT complaints.complaint_id, complaints.video_id, complaints.report_id, complaints.complaint_date, complaints.complaint_content, complaints.complaint_target 
+FROM complaints 
+WHERE complaints.complaint_id = ?
+2026-02-10 17:04:08,847 INFO sqlalchemy.engine.Engine [generated in 0.00004s] ('c1',)
+2026-02-10 17:04:08,847 INFO sqlalchemy.engine.Engine SELECT complaints.complaint_id AS complaints_complaint_id, complaints.video_id AS complaints_video_id, complaints.report_id AS complaints_report_id, complaints.complaint_date AS complaints_complaint_date, complaints.complaint_content AS complaints_complaint_content, complaints.complaint_target AS complaints_complaint_target 
+FROM complaints 
+WHERE complaints.video_id = ?
+2026-02-10 17:04:08,847 INFO sqlalchemy.engine.Engine [generated in 0.00004s] ('v_bad',)
+2026-02-10 17:04:08,847 INFO sqlalchemy.engine.Engine SELECT complaints.complaint_id AS complaints_complaint_id, complaints.video_id AS complaints_video_id, complaints.report_id AS complaints_report_id, complaints.complaint_date AS complaints_complaint_date, complaints.complaint_content AS complaints_complaint_content, complaints.complaint_target AS complaints_complaint_target 
+FROM complaints 
+WHERE complaints.complaint_id = ?
+ LIMIT ? OFFSET ?
+2026-02-10 17:04:08,847 INFO sqlalchemy.engine.Engine [generated in 0.00005s] ('c1', 1, 0)
+2026-02-10 17:04:08,847 INFO sqlalchemy.engine.Engine DELETE FROM complaints WHERE complaints.complaint_id = ?
+2026-02-10 17:04:08,847 INFO sqlalchemy.engine.Engine [cached since 0.005531s ago] ('c1',)
+2026-02-10 17:04:08,847 INFO sqlalchemy.engine.Engine COMMIT
+2026-02-10 17:04:08,847 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,848 INFO sqlalchemy.engine.Engine SELECT complaints.complaint_id AS complaints_complaint_id, complaints.video_id AS complaints_video_id, complaints.report_id AS complaints_report_id, complaints.complaint_date AS complaints_complaint_date, complaints.complaint_content AS complaints_complaint_content, complaints.complaint_target AS complaints_complaint_target 
+FROM complaints 
+WHERE complaints.complaint_id = ?
+ LIMIT ? OFFSET ?
+2026-02-10 17:04:08,848 INFO sqlalchemy.engine.Engine [cached since 0.0004331s ago] ('c1', 1, 0)
+PASSED2026-02-10 17:04:08,848 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-02-10 17:04:08,848 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,848 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("complaints")
+2026-02-10 17:04:08,848 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,848 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("videos")
+2026-02-10 17:04:08,848 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,848 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("watch_history")
+2026-02-10 17:04:08,848 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,848 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("ai_reports")
+2026-02-10 17:04:08,848 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,848 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("users")
+2026-02-10 17:04:08,848 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,848 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("user_youtubes")
+2026-02-10 17:04:08,848 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,848 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("parent_child")
+2026-02-10 17:04:08,848 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,848 INFO sqlalchemy.engine.Engine 
+DROP TABLE complaints
+2026-02-10 17:04:08,848 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,848 INFO sqlalchemy.engine.Engine 
+DROP TABLE parent_child
+2026-02-10 17:04:08,848 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,848 INFO sqlalchemy.engine.Engine 
+DROP TABLE user_youtubes
+2026-02-10 17:04:08,848 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,848 INFO sqlalchemy.engine.Engine 
+DROP TABLE ai_reports
+2026-02-10 17:04:08,848 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,849 INFO sqlalchemy.engine.Engine 
+DROP TABLE watch_history
+2026-02-10 17:04:08,849 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,849 INFO sqlalchemy.engine.Engine 
+DROP TABLE users
+2026-02-10 17:04:08,849 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,849 INFO sqlalchemy.engine.Engine 
+DROP TABLE videos
+2026-02-10 17:04:08,849 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,849 INFO sqlalchemy.engine.Engine COMMIT
+
+tests/features/report/test_report_model.py::test_report_flow 2026-02-10 17:04:08,849 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,849 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("complaints")
+2026-02-10 17:04:08,849 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,849 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("complaints")
+2026-02-10 17:04:08,849 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,849 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("videos")
+2026-02-10 17:04:08,849 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,849 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("videos")
+2026-02-10 17:04:08,849 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,849 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("watch_history")
+2026-02-10 17:04:08,849 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,849 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("watch_history")
+2026-02-10 17:04:08,849 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,849 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("ai_reports")
+2026-02-10 17:04:08,849 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,849 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("ai_reports")
+2026-02-10 17:04:08,849 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,849 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("users")
+2026-02-10 17:04:08,849 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,849 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("users")
+2026-02-10 17:04:08,849 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,849 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("user_youtubes")
+2026-02-10 17:04:08,850 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,850 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("user_youtubes")
+2026-02-10 17:04:08,850 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,850 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("parent_child")
+2026-02-10 17:04:08,850 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,850 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("parent_child")
+2026-02-10 17:04:08,850 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,850 INFO sqlalchemy.engine.Engine 
+CREATE TABLE videos (
+	video_id VARCHAR(255) NOT NULL, 
+	video_title VARCHAR(255), 
+	channel VARCHAR(255), 
+	upload_date DATETIME, 
+	video_script TEXT, 
+	video_runtime INTEGER, 
+	thumbnail VARCHAR(500), 
+	youtube_url VARCHAR(500), 
+	saved_url VARCHAR(500), 
+	status VARCHAR(20), 
+	PRIMARY KEY (video_id), 
+	CONSTRAINT chk_video_status CHECK (status IN ('SAFE', 'HARMFUL', 'PENDING'))
+)
+
+
+2026-02-10 17:04:08,850 INFO sqlalchemy.engine.Engine [no key 0.00003s] ()
+2026-02-10 17:04:08,850 INFO sqlalchemy.engine.Engine 
+CREATE TABLE users (
+	user_id VARCHAR(255) NOT NULL, 
+	password VARCHAR(255) NOT NULL, 
+	name VARCHAR(100) NOT NULL, 
+	sex VARCHAR(10), 
+	birth_date DATE, 
+	created_at DATETIME, 
+	user_email VARCHAR(255) NOT NULL, 
+	PRIMARY KEY (user_id), 
+	CONSTRAINT chk_sex CHECK (sex IN ('M', 'F')), 
+	UNIQUE (user_email)
+)
+
+
+2026-02-10 17:04:08,850 INFO sqlalchemy.engine.Engine [no key 0.00003s] ()
+2026-02-10 17:04:08,850 INFO sqlalchemy.engine.Engine 
+CREATE TABLE watch_history (
+	history_id VARCHAR(255) NOT NULL, 
+	user_id VARCHAR(255) NOT NULL, 
+	video_id VARCHAR(255) NOT NULL, 
+	watched_at DATETIME, 
+	PRIMARY KEY (history_id), 
+	FOREIGN KEY(user_id) REFERENCES users (user_id) ON DELETE CASCADE, 
+	FOREIGN KEY(video_id) REFERENCES videos (video_id) ON DELETE CASCADE
+)
+
+
+2026-02-10 17:04:08,850 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,850 INFO sqlalchemy.engine.Engine CREATE INDEX idx_watch_time ON watch_history (watched_at)
+2026-02-10 17:04:08,850 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,850 INFO sqlalchemy.engine.Engine CREATE INDEX idx_watch_video ON watch_history (video_id)
+2026-02-10 17:04:08,850 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,850 INFO sqlalchemy.engine.Engine CREATE INDEX idx_watch_user ON watch_history (user_id)
+2026-02-10 17:04:08,850 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,850 INFO sqlalchemy.engine.Engine 
+CREATE TABLE ai_reports (
+	report_id VARCHAR(255) NOT NULL, 
+	video_id VARCHAR(255) NOT NULL, 
+	legal_report TEXT, 
+	fact_report TEXT, 
+	is_generated_by TEXT, 
+	summary TEXT, 
+	created_at DATETIME, 
+	PRIMARY KEY (report_id), 
+	UNIQUE (video_id), 
+	FOREIGN KEY(video_id) REFERENCES videos (video_id) ON DELETE CASCADE
+)
+
+
+2026-02-10 17:04:08,850 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,850 INFO sqlalchemy.engine.Engine 
+CREATE TABLE user_youtubes (
+	youtube_account_id VARCHAR(255) NOT NULL, 
+	youtube_email VARCHAR(255), 
+	youtube_nickname VARCHAR(255), 
+	user_id VARCHAR(255) NOT NULL, 
+	PRIMARY KEY (youtube_account_id), 
+	UNIQUE (youtube_email), 
+	FOREIGN KEY(user_id) REFERENCES users (user_id) ON DELETE CASCADE
+)
+
+
+2026-02-10 17:04:08,850 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,851 INFO sqlalchemy.engine.Engine 
+CREATE TABLE parent_child (
+	parent_user_id VARCHAR(255) NOT NULL, 
+	child_user_id VARCHAR(255) NOT NULL, 
+	PRIMARY KEY (parent_user_id, child_user_id), 
+	FOREIGN KEY(parent_user_id) REFERENCES users (user_id) ON DELETE CASCADE, 
+	FOREIGN KEY(child_user_id) REFERENCES users (user_id) ON DELETE CASCADE
+)
+
+
+2026-02-10 17:04:08,851 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,851 INFO sqlalchemy.engine.Engine 
+CREATE TABLE complaints (
+	complaint_id VARCHAR(255) NOT NULL, 
+	video_id VARCHAR(255) NOT NULL, 
+	report_id VARCHAR(255), 
+	complaint_date DATETIME, 
+	complaint_content TEXT, 
+	complaint_target VARCHAR(255), 
+	PRIMARY KEY (complaint_id), 
+	FOREIGN KEY(video_id) REFERENCES videos (video_id) ON DELETE CASCADE, 
+	FOREIGN KEY(report_id) REFERENCES ai_reports (report_id) ON DELETE SET NULL
+)
+
+
+2026-02-10 17:04:08,851 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,851 INFO sqlalchemy.engine.Engine COMMIT
+2026-02-10 17:04:08,851 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,851 INFO sqlalchemy.engine.Engine INSERT INTO videos (video_id, video_title, channel, upload_date, video_script, video_runtime, thumbnail, youtube_url, saved_url, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-10 17:04:08,851 INFO sqlalchemy.engine.Engine [cached since 0.01122s ago] ('v_rep', '분석할 영상', None, None, None, None, None, None, None, 'PENDING')
+2026-02-10 17:04:08,851 INFO sqlalchemy.engine.Engine COMMIT
+2026-02-10 17:04:08,851 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,851 INFO sqlalchemy.engine.Engine INSERT INTO ai_reports (report_id, video_id, legal_report, fact_report, is_generated_by, summary, created_at) VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP) RETURNING created_at
+2026-02-10 17:04:08,851 INFO sqlalchemy.engine.Engine [generated in 0.00004s] ('r_1', 'v_rep', None, '사실 관계 확인됨', None, '이 영상은 안전합니다.')
+2026-02-10 17:04:08,852 INFO sqlalchemy.engine.Engine COMMIT
+2026-02-10 17:04:08,852 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,852 INFO sqlalchemy.engine.Engine SELECT ai_reports.report_id AS ai_reports_report_id, ai_reports.video_id AS ai_reports_video_id, ai_reports.legal_report AS ai_reports_legal_report, ai_reports.fact_report AS ai_reports_fact_report, ai_reports.is_generated_by AS ai_reports_is_generated_by, ai_reports.summary AS ai_reports_summary, ai_reports.created_at AS ai_reports_created_at 
+FROM ai_reports 
+WHERE ai_reports.report_id = ?
+ LIMIT ? OFFSET ?
+2026-02-10 17:04:08,852 INFO sqlalchemy.engine.Engine [generated in 0.00004s] ('r_1', 1, 0)
+2026-02-10 17:04:08,852 INFO sqlalchemy.engine.Engine DELETE FROM ai_reports WHERE ai_reports.report_id = ?
+2026-02-10 17:04:08,852 INFO sqlalchemy.engine.Engine [generated in 0.00003s] ('r_1',)
+2026-02-10 17:04:08,852 INFO sqlalchemy.engine.Engine COMMIT
+PASSED2026-02-10 17:04:08,852 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,852 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("complaints")
+2026-02-10 17:04:08,852 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,853 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("videos")
+2026-02-10 17:04:08,853 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,853 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("watch_history")
+2026-02-10 17:04:08,853 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,853 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("ai_reports")
+2026-02-10 17:04:08,853 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,853 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("users")
+2026-02-10 17:04:08,853 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,853 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("user_youtubes")
+2026-02-10 17:04:08,853 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,853 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("parent_child")
+2026-02-10 17:04:08,853 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,853 INFO sqlalchemy.engine.Engine 
+DROP TABLE complaints
+2026-02-10 17:04:08,853 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,853 INFO sqlalchemy.engine.Engine 
+DROP TABLE parent_child
+2026-02-10 17:04:08,853 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,853 INFO sqlalchemy.engine.Engine 
+DROP TABLE user_youtubes
+2026-02-10 17:04:08,853 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,853 INFO sqlalchemy.engine.Engine 
+DROP TABLE ai_reports
+2026-02-10 17:04:08,853 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,853 INFO sqlalchemy.engine.Engine 
+DROP TABLE watch_history
+2026-02-10 17:04:08,853 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,853 INFO sqlalchemy.engine.Engine 
+DROP TABLE users
+2026-02-10 17:04:08,853 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,853 INFO sqlalchemy.engine.Engine 
+DROP TABLE videos
+2026-02-10 17:04:08,853 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,853 INFO sqlalchemy.engine.Engine COMMIT
+
+tests/features/report/test_report_repository.py::test_report_lifecycle 2026-02-10 17:04:08,854 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,854 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("complaints")
+2026-02-10 17:04:08,854 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,854 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("complaints")
+2026-02-10 17:04:08,854 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,854 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("videos")
+2026-02-10 17:04:08,854 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,854 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("videos")
+2026-02-10 17:04:08,854 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,854 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("watch_history")
+2026-02-10 17:04:08,854 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,854 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("watch_history")
+2026-02-10 17:04:08,854 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,854 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("ai_reports")
+2026-02-10 17:04:08,854 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,854 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("ai_reports")
+2026-02-10 17:04:08,854 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,854 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("users")
+2026-02-10 17:04:08,854 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,854 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("users")
+2026-02-10 17:04:08,854 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,854 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("user_youtubes")
+2026-02-10 17:04:08,854 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,854 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("user_youtubes")
+2026-02-10 17:04:08,854 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,854 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("parent_child")
+2026-02-10 17:04:08,854 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,854 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("parent_child")
+2026-02-10 17:04:08,854 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,854 INFO sqlalchemy.engine.Engine 
+CREATE TABLE videos (
+	video_id VARCHAR(255) NOT NULL, 
+	video_title VARCHAR(255), 
+	channel VARCHAR(255), 
+	upload_date DATETIME, 
+	video_script TEXT, 
+	video_runtime INTEGER, 
+	thumbnail VARCHAR(500), 
+	youtube_url VARCHAR(500), 
+	saved_url VARCHAR(500), 
+	status VARCHAR(20), 
+	PRIMARY KEY (video_id), 
+	CONSTRAINT chk_video_status CHECK (status IN ('SAFE', 'HARMFUL', 'PENDING'))
+)
+
+
+2026-02-10 17:04:08,854 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,854 INFO sqlalchemy.engine.Engine 
+CREATE TABLE users (
+	user_id VARCHAR(255) NOT NULL, 
+	password VARCHAR(255) NOT NULL, 
+	name VARCHAR(100) NOT NULL, 
+	sex VARCHAR(10), 
+	birth_date DATE, 
+	created_at DATETIME, 
+	user_email VARCHAR(255) NOT NULL, 
+	PRIMARY KEY (user_id), 
+	CONSTRAINT chk_sex CHECK (sex IN ('M', 'F')), 
+	UNIQUE (user_email)
+)
+
+
+2026-02-10 17:04:08,854 INFO sqlalchemy.engine.Engine [no key 0.00003s] ()
+2026-02-10 17:04:08,855 INFO sqlalchemy.engine.Engine 
+CREATE TABLE watch_history (
+	history_id VARCHAR(255) NOT NULL, 
+	user_id VARCHAR(255) NOT NULL, 
+	video_id VARCHAR(255) NOT NULL, 
+	watched_at DATETIME, 
+	PRIMARY KEY (history_id), 
+	FOREIGN KEY(user_id) REFERENCES users (user_id) ON DELETE CASCADE, 
+	FOREIGN KEY(video_id) REFERENCES videos (video_id) ON DELETE CASCADE
+)
+
+
+2026-02-10 17:04:08,855 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,855 INFO sqlalchemy.engine.Engine CREATE INDEX idx_watch_time ON watch_history (watched_at)
+2026-02-10 17:04:08,855 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,855 INFO sqlalchemy.engine.Engine CREATE INDEX idx_watch_video ON watch_history (video_id)
+2026-02-10 17:04:08,855 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,855 INFO sqlalchemy.engine.Engine CREATE INDEX idx_watch_user ON watch_history (user_id)
+2026-02-10 17:04:08,855 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,855 INFO sqlalchemy.engine.Engine 
+CREATE TABLE ai_reports (
+	report_id VARCHAR(255) NOT NULL, 
+	video_id VARCHAR(255) NOT NULL, 
+	legal_report TEXT, 
+	fact_report TEXT, 
+	is_generated_by TEXT, 
+	summary TEXT, 
+	created_at DATETIME, 
+	PRIMARY KEY (report_id), 
+	UNIQUE (video_id), 
+	FOREIGN KEY(video_id) REFERENCES videos (video_id) ON DELETE CASCADE
+)
+
+
+2026-02-10 17:04:08,855 INFO sqlalchemy.engine.Engine [no key 0.00003s] ()
+2026-02-10 17:04:08,855 INFO sqlalchemy.engine.Engine 
+CREATE TABLE user_youtubes (
+	youtube_account_id VARCHAR(255) NOT NULL, 
+	youtube_email VARCHAR(255), 
+	youtube_nickname VARCHAR(255), 
+	user_id VARCHAR(255) NOT NULL, 
+	PRIMARY KEY (youtube_account_id), 
+	UNIQUE (youtube_email), 
+	FOREIGN KEY(user_id) REFERENCES users (user_id) ON DELETE CASCADE
+)
+
+
+2026-02-10 17:04:08,855 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,855 INFO sqlalchemy.engine.Engine 
+CREATE TABLE parent_child (
+	parent_user_id VARCHAR(255) NOT NULL, 
+	child_user_id VARCHAR(255) NOT NULL, 
+	PRIMARY KEY (parent_user_id, child_user_id), 
+	FOREIGN KEY(parent_user_id) REFERENCES users (user_id) ON DELETE CASCADE, 
+	FOREIGN KEY(child_user_id) REFERENCES users (user_id) ON DELETE CASCADE
+)
+
+
+2026-02-10 17:04:08,855 INFO sqlalchemy.engine.Engine [no key 0.00003s] ()
+2026-02-10 17:04:08,855 INFO sqlalchemy.engine.Engine 
+CREATE TABLE complaints (
+	complaint_id VARCHAR(255) NOT NULL, 
+	video_id VARCHAR(255) NOT NULL, 
+	report_id VARCHAR(255), 
+	complaint_date DATETIME, 
+	complaint_content TEXT, 
+	complaint_target VARCHAR(255), 
+	PRIMARY KEY (complaint_id), 
+	FOREIGN KEY(video_id) REFERENCES videos (video_id) ON DELETE CASCADE, 
+	FOREIGN KEY(report_id) REFERENCES ai_reports (report_id) ON DELETE SET NULL
+)
+
+
+2026-02-10 17:04:08,855 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,855 INFO sqlalchemy.engine.Engine COMMIT
+2026-02-10 17:04:08,856 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,856 INFO sqlalchemy.engine.Engine INSERT INTO videos (video_id, video_title, channel, upload_date, video_script, video_runtime, thumbnail, youtube_url, saved_url, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-10 17:04:08,856 INFO sqlalchemy.engine.Engine [cached since 0.01586s ago] ('v_rep', '분석대상', None, None, None, None, None, None, None, 'PENDING')
+2026-02-10 17:04:08,856 INFO sqlalchemy.engine.Engine COMMIT
+2026-02-10 17:04:08,856 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,856 INFO sqlalchemy.engine.Engine SELECT videos.video_id, videos.video_title, videos.channel, videos.upload_date, videos.video_script, videos.video_runtime, videos.thumbnail, videos.youtube_url, videos.saved_url, videos.status 
+FROM videos 
+WHERE videos.video_id = ?
+2026-02-10 17:04:08,856 INFO sqlalchemy.engine.Engine [cached since 0.009982s ago] ('v_rep',)
+2026-02-10 17:04:08,856 INFO sqlalchemy.engine.Engine INSERT INTO ai_reports (report_id, video_id, legal_report, fact_report, is_generated_by, summary, created_at) VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP) RETURNING created_at
+2026-02-10 17:04:08,856 INFO sqlalchemy.engine.Engine [cached since 0.004712s ago] ('r1', 'v_rep', None, '사실입니다', 'GPT-4', '요약입니다')
+2026-02-10 17:04:08,856 INFO sqlalchemy.engine.Engine COMMIT
+2026-02-10 17:04:08,856 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,856 INFO sqlalchemy.engine.Engine SELECT ai_reports.report_id, ai_reports.video_id, ai_reports.legal_report, ai_reports.fact_report, ai_reports.is_generated_by, ai_reports.summary, ai_reports.created_at 
+FROM ai_reports 
+WHERE ai_reports.report_id = ?
+2026-02-10 17:04:08,856 INFO sqlalchemy.engine.Engine [generated in 0.00004s] ('r1',)
+2026-02-10 17:04:08,857 INFO sqlalchemy.engine.Engine SELECT ai_reports.report_id AS ai_reports_report_id, ai_reports.video_id AS ai_reports_video_id, ai_reports.legal_report AS ai_reports_legal_report, ai_reports.fact_report AS ai_reports_fact_report, ai_reports.is_generated_by AS ai_reports_is_generated_by, ai_reports.summary AS ai_reports_summary, ai_reports.created_at AS ai_reports_created_at 
+FROM ai_reports 
+WHERE ai_reports.video_id = ?
+ LIMIT ? OFFSET ?
+2026-02-10 17:04:08,857 INFO sqlalchemy.engine.Engine [generated in 0.00005s] ('v_rep', 1, 0)
+2026-02-10 17:04:08,857 INFO sqlalchemy.engine.Engine SELECT ai_reports.report_id AS ai_reports_report_id, ai_reports.video_id AS ai_reports_video_id, ai_reports.legal_report AS ai_reports_legal_report, ai_reports.fact_report AS ai_reports_fact_report, ai_reports.is_generated_by AS ai_reports_is_generated_by, ai_reports.summary AS ai_reports_summary, ai_reports.created_at AS ai_reports_created_at 
+FROM ai_reports 
+WHERE ai_reports.report_id = ?
+ LIMIT ? OFFSET ?
+2026-02-10 17:04:08,857 INFO sqlalchemy.engine.Engine [cached since 0.005097s ago] ('r1', 1, 0)
+2026-02-10 17:04:08,857 INFO sqlalchemy.engine.Engine DELETE FROM ai_reports WHERE ai_reports.report_id = ?
+2026-02-10 17:04:08,857 INFO sqlalchemy.engine.Engine [cached since 0.004945s ago] ('r1',)
+2026-02-10 17:04:08,857 INFO sqlalchemy.engine.Engine COMMIT
+2026-02-10 17:04:08,857 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,857 INFO sqlalchemy.engine.Engine SELECT ai_reports.report_id AS ai_reports_report_id, ai_reports.video_id AS ai_reports_video_id, ai_reports.legal_report AS ai_reports_legal_report, ai_reports.fact_report AS ai_reports_fact_report, ai_reports.is_generated_by AS ai_reports_is_generated_by, ai_reports.summary AS ai_reports_summary, ai_reports.created_at AS ai_reports_created_at 
+FROM ai_reports 
+WHERE ai_reports.report_id = ?
+ LIMIT ? OFFSET ?
+2026-02-10 17:04:08,857 INFO sqlalchemy.engine.Engine [cached since 0.005454s ago] ('r1', 1, 0)
+PASSED2026-02-10 17:04:08,858 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-02-10 17:04:08,858 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,858 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("complaints")
+2026-02-10 17:04:08,858 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,858 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("videos")
+2026-02-10 17:04:08,858 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,858 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("watch_history")
+2026-02-10 17:04:08,858 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,858 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("ai_reports")
+2026-02-10 17:04:08,858 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,858 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("users")
+2026-02-10 17:04:08,858 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,858 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("user_youtubes")
+2026-02-10 17:04:08,858 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,858 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("parent_child")
+2026-02-10 17:04:08,858 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,858 INFO sqlalchemy.engine.Engine 
+DROP TABLE complaints
+2026-02-10 17:04:08,858 INFO sqlalchemy.engine.Engine [no key 0.00003s] ()
+2026-02-10 17:04:08,858 INFO sqlalchemy.engine.Engine 
+DROP TABLE parent_child
+2026-02-10 17:04:08,858 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,858 INFO sqlalchemy.engine.Engine 
+DROP TABLE user_youtubes
+2026-02-10 17:04:08,858 INFO sqlalchemy.engine.Engine [no key 0.00003s] ()
+2026-02-10 17:04:08,858 INFO sqlalchemy.engine.Engine 
+DROP TABLE ai_reports
+2026-02-10 17:04:08,858 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,858 INFO sqlalchemy.engine.Engine 
+DROP TABLE watch_history
+2026-02-10 17:04:08,858 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,858 INFO sqlalchemy.engine.Engine 
+DROP TABLE users
+2026-02-10 17:04:08,858 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,859 INFO sqlalchemy.engine.Engine 
+DROP TABLE videos
+2026-02-10 17:04:08,859 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,859 INFO sqlalchemy.engine.Engine COMMIT
+
+tests/features/user/test_user_model.py::test_user_flow 2026-02-10 17:04:08,859 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,859 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("complaints")
+2026-02-10 17:04:08,859 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,859 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("complaints")
+2026-02-10 17:04:08,859 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,859 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("videos")
+2026-02-10 17:04:08,859 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,859 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("videos")
+2026-02-10 17:04:08,859 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,859 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("watch_history")
+2026-02-10 17:04:08,859 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,859 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("watch_history")
+2026-02-10 17:04:08,859 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,859 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("ai_reports")
+2026-02-10 17:04:08,859 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,859 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("ai_reports")
+2026-02-10 17:04:08,859 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,859 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("users")
+2026-02-10 17:04:08,859 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,859 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("users")
+2026-02-10 17:04:08,859 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,859 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("user_youtubes")
+2026-02-10 17:04:08,859 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,859 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("user_youtubes")
+2026-02-10 17:04:08,859 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,859 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("parent_child")
+2026-02-10 17:04:08,859 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,860 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("parent_child")
+2026-02-10 17:04:08,860 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,860 INFO sqlalchemy.engine.Engine 
+CREATE TABLE videos (
+	video_id VARCHAR(255) NOT NULL, 
+	video_title VARCHAR(255), 
+	channel VARCHAR(255), 
+	upload_date DATETIME, 
+	video_script TEXT, 
+	video_runtime INTEGER, 
+	thumbnail VARCHAR(500), 
+	youtube_url VARCHAR(500), 
+	saved_url VARCHAR(500), 
+	status VARCHAR(20), 
+	PRIMARY KEY (video_id), 
+	CONSTRAINT chk_video_status CHECK (status IN ('SAFE', 'HARMFUL', 'PENDING'))
+)
+
+
+2026-02-10 17:04:08,860 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,860 INFO sqlalchemy.engine.Engine 
+CREATE TABLE users (
+	user_id VARCHAR(255) NOT NULL, 
+	password VARCHAR(255) NOT NULL, 
+	name VARCHAR(100) NOT NULL, 
+	sex VARCHAR(10), 
+	birth_date DATE, 
+	created_at DATETIME, 
+	user_email VARCHAR(255) NOT NULL, 
+	PRIMARY KEY (user_id), 
+	CONSTRAINT chk_sex CHECK (sex IN ('M', 'F')), 
+	UNIQUE (user_email)
+)
+
+
+2026-02-10 17:04:08,860 INFO sqlalchemy.engine.Engine [no key 0.00003s] ()
+2026-02-10 17:04:08,860 INFO sqlalchemy.engine.Engine 
+CREATE TABLE watch_history (
+	history_id VARCHAR(255) NOT NULL, 
+	user_id VARCHAR(255) NOT NULL, 
+	video_id VARCHAR(255) NOT NULL, 
+	watched_at DATETIME, 
+	PRIMARY KEY (history_id), 
+	FOREIGN KEY(user_id) REFERENCES users (user_id) ON DELETE CASCADE, 
+	FOREIGN KEY(video_id) REFERENCES videos (video_id) ON DELETE CASCADE
+)
+
+
+2026-02-10 17:04:08,860 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,860 INFO sqlalchemy.engine.Engine CREATE INDEX idx_watch_time ON watch_history (watched_at)
+2026-02-10 17:04:08,860 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,860 INFO sqlalchemy.engine.Engine CREATE INDEX idx_watch_video ON watch_history (video_id)
+2026-02-10 17:04:08,860 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,860 INFO sqlalchemy.engine.Engine CREATE INDEX idx_watch_user ON watch_history (user_id)
+2026-02-10 17:04:08,860 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,860 INFO sqlalchemy.engine.Engine 
+CREATE TABLE ai_reports (
+	report_id VARCHAR(255) NOT NULL, 
+	video_id VARCHAR(255) NOT NULL, 
+	legal_report TEXT, 
+	fact_report TEXT, 
+	is_generated_by TEXT, 
+	summary TEXT, 
+	created_at DATETIME, 
+	PRIMARY KEY (report_id), 
+	UNIQUE (video_id), 
+	FOREIGN KEY(video_id) REFERENCES videos (video_id) ON DELETE CASCADE
+)
+
+
+2026-02-10 17:04:08,860 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,860 INFO sqlalchemy.engine.Engine 
+CREATE TABLE user_youtubes (
+	youtube_account_id VARCHAR(255) NOT NULL, 
+	youtube_email VARCHAR(255), 
+	youtube_nickname VARCHAR(255), 
+	user_id VARCHAR(255) NOT NULL, 
+	PRIMARY KEY (youtube_account_id), 
+	UNIQUE (youtube_email), 
+	FOREIGN KEY(user_id) REFERENCES users (user_id) ON DELETE CASCADE
+)
+
+
+2026-02-10 17:04:08,860 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,860 INFO sqlalchemy.engine.Engine 
+CREATE TABLE parent_child (
+	parent_user_id VARCHAR(255) NOT NULL, 
+	child_user_id VARCHAR(255) NOT NULL, 
+	PRIMARY KEY (parent_user_id, child_user_id), 
+	FOREIGN KEY(parent_user_id) REFERENCES users (user_id) ON DELETE CASCADE, 
+	FOREIGN KEY(child_user_id) REFERENCES users (user_id) ON DELETE CASCADE
+)
+
+
+2026-02-10 17:04:08,860 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,861 INFO sqlalchemy.engine.Engine 
+CREATE TABLE complaints (
+	complaint_id VARCHAR(255) NOT NULL, 
+	video_id VARCHAR(255) NOT NULL, 
+	report_id VARCHAR(255), 
+	complaint_date DATETIME, 
+	complaint_content TEXT, 
+	complaint_target VARCHAR(255), 
+	PRIMARY KEY (complaint_id), 
+	FOREIGN KEY(video_id) REFERENCES videos (video_id) ON DELETE CASCADE, 
+	FOREIGN KEY(report_id) REFERENCES ai_reports (report_id) ON DELETE SET NULL
+)
+
+
+2026-02-10 17:04:08,861 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,861 INFO sqlalchemy.engine.Engine COMMIT
+2026-02-10 17:04:08,861 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,861 INFO sqlalchemy.engine.Engine INSERT INTO users (user_id, password, name, sex, birth_date, created_at, user_email) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?) RETURNING created_at
+2026-02-10 17:04:08,861 INFO sqlalchemy.engine.Engine [generated in 0.00005s] ('user_1', 'password123', '김철수', 'M', None, 'chulsoo@example.com')
+2026-02-10 17:04:08,861 INFO sqlalchemy.engine.Engine COMMIT
+2026-02-10 17:04:08,861 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,862 INFO sqlalchemy.engine.Engine SELECT users.user_id AS users_user_id, users.password AS users_password, users.name AS users_name, users.sex AS users_sex, users.birth_date AS users_birth_date, users.created_at AS users_created_at, users.user_email AS users_user_email 
+FROM users 
+WHERE users.user_id = ?
+ LIMIT ? OFFSET ?
+2026-02-10 17:04:08,862 INFO sqlalchemy.engine.Engine [generated in 0.00005s] ('user_1', 1, 0)
+2026-02-10 17:04:08,862 INFO sqlalchemy.engine.Engine DELETE FROM users WHERE users.user_id = ?
+2026-02-10 17:04:08,862 INFO sqlalchemy.engine.Engine [generated in 0.00004s] ('user_1',)
+2026-02-10 17:04:08,862 INFO sqlalchemy.engine.Engine COMMIT
+2026-02-10 17:04:08,862 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,862 INFO sqlalchemy.engine.Engine SELECT users.user_id AS users_user_id, users.password AS users_password, users.name AS users_name, users.sex AS users_sex, users.birth_date AS users_birth_date, users.created_at AS users_created_at, users.user_email AS users_user_email 
+FROM users 
+WHERE users.user_id = ?
+ LIMIT ? OFFSET ?
+2026-02-10 17:04:08,862 INFO sqlalchemy.engine.Engine [cached since 0.0005231s ago] ('user_1', 1, 0)
+PASSED2026-02-10 17:04:08,862 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-02-10 17:04:08,862 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,862 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("complaints")
+2026-02-10 17:04:08,862 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,862 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("videos")
+2026-02-10 17:04:08,862 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,862 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("watch_history")
+2026-02-10 17:04:08,862 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,863 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("ai_reports")
+2026-02-10 17:04:08,863 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,863 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("users")
+2026-02-10 17:04:08,863 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,863 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("user_youtubes")
+2026-02-10 17:04:08,863 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,863 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("parent_child")
+2026-02-10 17:04:08,863 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,863 INFO sqlalchemy.engine.Engine 
+DROP TABLE complaints
+2026-02-10 17:04:08,863 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,863 INFO sqlalchemy.engine.Engine 
+DROP TABLE parent_child
+2026-02-10 17:04:08,863 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,863 INFO sqlalchemy.engine.Engine 
+DROP TABLE user_youtubes
+2026-02-10 17:04:08,863 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,863 INFO sqlalchemy.engine.Engine 
+DROP TABLE ai_reports
+2026-02-10 17:04:08,863 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,863 INFO sqlalchemy.engine.Engine 
+DROP TABLE watch_history
+2026-02-10 17:04:08,863 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,863 INFO sqlalchemy.engine.Engine 
+DROP TABLE users
+2026-02-10 17:04:08,863 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,863 INFO sqlalchemy.engine.Engine 
+DROP TABLE videos
+2026-02-10 17:04:08,863 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,863 INFO sqlalchemy.engine.Engine COMMIT
+
+tests/features/user/test_user_model.py::test_user_youtube_relation 2026-02-10 17:04:08,863 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,863 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("complaints")
+2026-02-10 17:04:08,863 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,864 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("complaints")
+2026-02-10 17:04:08,864 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,864 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("videos")
+2026-02-10 17:04:08,864 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,864 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("videos")
+2026-02-10 17:04:08,864 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,864 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("watch_history")
+2026-02-10 17:04:08,864 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,864 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("watch_history")
+2026-02-10 17:04:08,864 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,864 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("ai_reports")
+2026-02-10 17:04:08,864 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,864 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("ai_reports")
+2026-02-10 17:04:08,864 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,864 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("users")
+2026-02-10 17:04:08,864 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,864 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("users")
+2026-02-10 17:04:08,864 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,864 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("user_youtubes")
+2026-02-10 17:04:08,864 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,864 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("user_youtubes")
+2026-02-10 17:04:08,864 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,864 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("parent_child")
+2026-02-10 17:04:08,864 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,864 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("parent_child")
+2026-02-10 17:04:08,864 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,864 INFO sqlalchemy.engine.Engine 
+CREATE TABLE videos (
+	video_id VARCHAR(255) NOT NULL, 
+	video_title VARCHAR(255), 
+	channel VARCHAR(255), 
+	upload_date DATETIME, 
+	video_script TEXT, 
+	video_runtime INTEGER, 
+	thumbnail VARCHAR(500), 
+	youtube_url VARCHAR(500), 
+	saved_url VARCHAR(500), 
+	status VARCHAR(20), 
+	PRIMARY KEY (video_id), 
+	CONSTRAINT chk_video_status CHECK (status IN ('SAFE', 'HARMFUL', 'PENDING'))
+)
+
+
+2026-02-10 17:04:08,864 INFO sqlalchemy.engine.Engine [no key 0.00003s] ()
+2026-02-10 17:04:08,864 INFO sqlalchemy.engine.Engine 
+CREATE TABLE users (
+	user_id VARCHAR(255) NOT NULL, 
+	password VARCHAR(255) NOT NULL, 
+	name VARCHAR(100) NOT NULL, 
+	sex VARCHAR(10), 
+	birth_date DATE, 
+	created_at DATETIME, 
+	user_email VARCHAR(255) NOT NULL, 
+	PRIMARY KEY (user_id), 
+	CONSTRAINT chk_sex CHECK (sex IN ('M', 'F')), 
+	UNIQUE (user_email)
+)
+
+
+2026-02-10 17:04:08,864 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,865 INFO sqlalchemy.engine.Engine 
+CREATE TABLE watch_history (
+	history_id VARCHAR(255) NOT NULL, 
+	user_id VARCHAR(255) NOT NULL, 
+	video_id VARCHAR(255) NOT NULL, 
+	watched_at DATETIME, 
+	PRIMARY KEY (history_id), 
+	FOREIGN KEY(user_id) REFERENCES users (user_id) ON DELETE CASCADE, 
+	FOREIGN KEY(video_id) REFERENCES videos (video_id) ON DELETE CASCADE
+)
+
+
+2026-02-10 17:04:08,865 INFO sqlalchemy.engine.Engine [no key 0.00003s] ()
+2026-02-10 17:04:08,865 INFO sqlalchemy.engine.Engine CREATE INDEX idx_watch_time ON watch_history (watched_at)
+2026-02-10 17:04:08,865 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,865 INFO sqlalchemy.engine.Engine CREATE INDEX idx_watch_video ON watch_history (video_id)
+2026-02-10 17:04:08,865 INFO sqlalchemy.engine.Engine [no key 0.00003s] ()
+2026-02-10 17:04:08,865 INFO sqlalchemy.engine.Engine CREATE INDEX idx_watch_user ON watch_history (user_id)
+2026-02-10 17:04:08,865 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,865 INFO sqlalchemy.engine.Engine 
+CREATE TABLE ai_reports (
+	report_id VARCHAR(255) NOT NULL, 
+	video_id VARCHAR(255) NOT NULL, 
+	legal_report TEXT, 
+	fact_report TEXT, 
+	is_generated_by TEXT, 
+	summary TEXT, 
+	created_at DATETIME, 
+	PRIMARY KEY (report_id), 
+	UNIQUE (video_id), 
+	FOREIGN KEY(video_id) REFERENCES videos (video_id) ON DELETE CASCADE
+)
+
+
+2026-02-10 17:04:08,865 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,865 INFO sqlalchemy.engine.Engine 
+CREATE TABLE user_youtubes (
+	youtube_account_id VARCHAR(255) NOT NULL, 
+	youtube_email VARCHAR(255), 
+	youtube_nickname VARCHAR(255), 
+	user_id VARCHAR(255) NOT NULL, 
+	PRIMARY KEY (youtube_account_id), 
+	UNIQUE (youtube_email), 
+	FOREIGN KEY(user_id) REFERENCES users (user_id) ON DELETE CASCADE
+)
+
+
+2026-02-10 17:04:08,865 INFO sqlalchemy.engine.Engine [no key 0.00003s] ()
+2026-02-10 17:04:08,865 INFO sqlalchemy.engine.Engine 
+CREATE TABLE parent_child (
+	parent_user_id VARCHAR(255) NOT NULL, 
+	child_user_id VARCHAR(255) NOT NULL, 
+	PRIMARY KEY (parent_user_id, child_user_id), 
+	FOREIGN KEY(parent_user_id) REFERENCES users (user_id) ON DELETE CASCADE, 
+	FOREIGN KEY(child_user_id) REFERENCES users (user_id) ON DELETE CASCADE
+)
+
+
+2026-02-10 17:04:08,865 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,865 INFO sqlalchemy.engine.Engine 
+CREATE TABLE complaints (
+	complaint_id VARCHAR(255) NOT NULL, 
+	video_id VARCHAR(255) NOT NULL, 
+	report_id VARCHAR(255), 
+	complaint_date DATETIME, 
+	complaint_content TEXT, 
+	complaint_target VARCHAR(255), 
+	PRIMARY KEY (complaint_id), 
+	FOREIGN KEY(video_id) REFERENCES videos (video_id) ON DELETE CASCADE, 
+	FOREIGN KEY(report_id) REFERENCES ai_reports (report_id) ON DELETE SET NULL
+)
+
+
+2026-02-10 17:04:08,865 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,865 INFO sqlalchemy.engine.Engine COMMIT
+2026-02-10 17:04:08,866 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,866 INFO sqlalchemy.engine.Engine INSERT INTO users (user_id, password, name, sex, birth_date, created_at, user_email) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?) RETURNING created_at
+2026-02-10 17:04:08,866 INFO sqlalchemy.engine.Engine [cached since 0.004587s ago] ('user_2', 'pw', '유튜버', None, None, 'y@e.com')
+2026-02-10 17:04:08,866 INFO sqlalchemy.engine.Engine COMMIT
+2026-02-10 17:04:08,866 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,866 INFO sqlalchemy.engine.Engine INSERT INTO user_youtubes (youtube_account_id, youtube_email, youtube_nickname, user_id) VALUES (?, ?, ?, ?)
+2026-02-10 17:04:08,866 INFO sqlalchemy.engine.Engine [generated in 0.00004s] ('yt_1', 'yt@google.com', '철수TV', 'user_2')
+2026-02-10 17:04:08,866 INFO sqlalchemy.engine.Engine COMMIT
+2026-02-10 17:04:08,866 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,866 INFO sqlalchemy.engine.Engine SELECT user_youtubes.youtube_account_id AS user_youtubes_youtube_account_id, user_youtubes.youtube_email AS user_youtubes_youtube_email, user_youtubes.youtube_nickname AS user_youtubes_youtube_nickname, user_youtubes.user_id AS user_youtubes_user_id 
+FROM user_youtubes 
+WHERE user_youtubes.youtube_account_id = ?
+ LIMIT ? OFFSET ?
+2026-02-10 17:04:08,867 INFO sqlalchemy.engine.Engine [generated in 0.00005s] ('yt_1', 1, 0)
+PASSED2026-02-10 17:04:08,867 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-02-10 17:04:08,867 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,867 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("complaints")
+2026-02-10 17:04:08,867 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,867 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("videos")
+2026-02-10 17:04:08,867 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,867 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("watch_history")
+2026-02-10 17:04:08,867 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,867 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("ai_reports")
+2026-02-10 17:04:08,867 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,867 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("users")
+2026-02-10 17:04:08,867 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,867 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("user_youtubes")
+2026-02-10 17:04:08,867 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,867 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("parent_child")
+2026-02-10 17:04:08,867 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,867 INFO sqlalchemy.engine.Engine 
+DROP TABLE complaints
+2026-02-10 17:04:08,867 INFO sqlalchemy.engine.Engine [no key 0.00003s] ()
+2026-02-10 17:04:08,867 INFO sqlalchemy.engine.Engine 
+DROP TABLE parent_child
+2026-02-10 17:04:08,867 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,867 INFO sqlalchemy.engine.Engine 
+DROP TABLE user_youtubes
+2026-02-10 17:04:08,867 INFO sqlalchemy.engine.Engine [no key 0.00003s] ()
+2026-02-10 17:04:08,867 INFO sqlalchemy.engine.Engine 
+DROP TABLE ai_reports
+2026-02-10 17:04:08,867 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,867 INFO sqlalchemy.engine.Engine 
+DROP TABLE watch_history
+2026-02-10 17:04:08,868 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,868 INFO sqlalchemy.engine.Engine 
+DROP TABLE users
+2026-02-10 17:04:08,868 INFO sqlalchemy.engine.Engine [no key 0.00003s] ()
+2026-02-10 17:04:08,868 INFO sqlalchemy.engine.Engine 
+DROP TABLE videos
+2026-02-10 17:04:08,868 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,868 INFO sqlalchemy.engine.Engine COMMIT
+
+tests/features/user/test_user_model.py::test_parent_child_relationship 2026-02-10 17:04:08,868 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,868 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("complaints")
+2026-02-10 17:04:08,868 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,868 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("complaints")
+2026-02-10 17:04:08,868 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,868 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("videos")
+2026-02-10 17:04:08,868 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,868 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("videos")
+2026-02-10 17:04:08,868 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,868 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("watch_history")
+2026-02-10 17:04:08,868 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,868 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("watch_history")
+2026-02-10 17:04:08,868 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,868 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("ai_reports")
+2026-02-10 17:04:08,868 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,868 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("ai_reports")
+2026-02-10 17:04:08,868 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,868 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("users")
+2026-02-10 17:04:08,868 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,868 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("users")
+2026-02-10 17:04:08,868 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,868 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("user_youtubes")
+2026-02-10 17:04:08,869 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,869 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("user_youtubes")
+2026-02-10 17:04:08,869 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,869 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("parent_child")
+2026-02-10 17:04:08,869 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,869 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("parent_child")
+2026-02-10 17:04:08,869 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,869 INFO sqlalchemy.engine.Engine 
+CREATE TABLE videos (
+	video_id VARCHAR(255) NOT NULL, 
+	video_title VARCHAR(255), 
+	channel VARCHAR(255), 
+	upload_date DATETIME, 
+	video_script TEXT, 
+	video_runtime INTEGER, 
+	thumbnail VARCHAR(500), 
+	youtube_url VARCHAR(500), 
+	saved_url VARCHAR(500), 
+	status VARCHAR(20), 
+	PRIMARY KEY (video_id), 
+	CONSTRAINT chk_video_status CHECK (status IN ('SAFE', 'HARMFUL', 'PENDING'))
+)
+
+
+2026-02-10 17:04:08,869 INFO sqlalchemy.engine.Engine [no key 0.00003s] ()
+2026-02-10 17:04:08,869 INFO sqlalchemy.engine.Engine 
+CREATE TABLE users (
+	user_id VARCHAR(255) NOT NULL, 
+	password VARCHAR(255) NOT NULL, 
+	name VARCHAR(100) NOT NULL, 
+	sex VARCHAR(10), 
+	birth_date DATE, 
+	created_at DATETIME, 
+	user_email VARCHAR(255) NOT NULL, 
+	PRIMARY KEY (user_id), 
+	CONSTRAINT chk_sex CHECK (sex IN ('M', 'F')), 
+	UNIQUE (user_email)
+)
+
+
+2026-02-10 17:04:08,869 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,869 INFO sqlalchemy.engine.Engine 
+CREATE TABLE watch_history (
+	history_id VARCHAR(255) NOT NULL, 
+	user_id VARCHAR(255) NOT NULL, 
+	video_id VARCHAR(255) NOT NULL, 
+	watched_at DATETIME, 
+	PRIMARY KEY (history_id), 
+	FOREIGN KEY(user_id) REFERENCES users (user_id) ON DELETE CASCADE, 
+	FOREIGN KEY(video_id) REFERENCES videos (video_id) ON DELETE CASCADE
+)
+
+
+2026-02-10 17:04:08,869 INFO sqlalchemy.engine.Engine [no key 0.00003s] ()
+2026-02-10 17:04:08,869 INFO sqlalchemy.engine.Engine CREATE INDEX idx_watch_time ON watch_history (watched_at)
+2026-02-10 17:04:08,869 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,869 INFO sqlalchemy.engine.Engine CREATE INDEX idx_watch_video ON watch_history (video_id)
+2026-02-10 17:04:08,869 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,869 INFO sqlalchemy.engine.Engine CREATE INDEX idx_watch_user ON watch_history (user_id)
+2026-02-10 17:04:08,869 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,869 INFO sqlalchemy.engine.Engine 
+CREATE TABLE ai_reports (
+	report_id VARCHAR(255) NOT NULL, 
+	video_id VARCHAR(255) NOT NULL, 
+	legal_report TEXT, 
+	fact_report TEXT, 
+	is_generated_by TEXT, 
+	summary TEXT, 
+	created_at DATETIME, 
+	PRIMARY KEY (report_id), 
+	UNIQUE (video_id), 
+	FOREIGN KEY(video_id) REFERENCES videos (video_id) ON DELETE CASCADE
+)
+
+
+2026-02-10 17:04:08,869 INFO sqlalchemy.engine.Engine [no key 0.00003s] ()
+2026-02-10 17:04:08,870 INFO sqlalchemy.engine.Engine 
+CREATE TABLE user_youtubes (
+	youtube_account_id VARCHAR(255) NOT NULL, 
+	youtube_email VARCHAR(255), 
+	youtube_nickname VARCHAR(255), 
+	user_id VARCHAR(255) NOT NULL, 
+	PRIMARY KEY (youtube_account_id), 
+	UNIQUE (youtube_email), 
+	FOREIGN KEY(user_id) REFERENCES users (user_id) ON DELETE CASCADE
+)
+
+
+2026-02-10 17:04:08,870 INFO sqlalchemy.engine.Engine [no key 0.00003s] ()
+2026-02-10 17:04:08,870 INFO sqlalchemy.engine.Engine 
+CREATE TABLE parent_child (
+	parent_user_id VARCHAR(255) NOT NULL, 
+	child_user_id VARCHAR(255) NOT NULL, 
+	PRIMARY KEY (parent_user_id, child_user_id), 
+	FOREIGN KEY(parent_user_id) REFERENCES users (user_id) ON DELETE CASCADE, 
+	FOREIGN KEY(child_user_id) REFERENCES users (user_id) ON DELETE CASCADE
+)
+
+
+2026-02-10 17:04:08,870 INFO sqlalchemy.engine.Engine [no key 0.00003s] ()
+2026-02-10 17:04:08,870 INFO sqlalchemy.engine.Engine 
+CREATE TABLE complaints (
+	complaint_id VARCHAR(255) NOT NULL, 
+	video_id VARCHAR(255) NOT NULL, 
+	report_id VARCHAR(255), 
+	complaint_date DATETIME, 
+	complaint_content TEXT, 
+	complaint_target VARCHAR(255), 
+	PRIMARY KEY (complaint_id), 
+	FOREIGN KEY(video_id) REFERENCES videos (video_id) ON DELETE CASCADE, 
+	FOREIGN KEY(report_id) REFERENCES ai_reports (report_id) ON DELETE SET NULL
+)
+
+
+2026-02-10 17:04:08,870 INFO sqlalchemy.engine.Engine [no key 0.00003s] ()
+2026-02-10 17:04:08,870 INFO sqlalchemy.engine.Engine COMMIT
+2026-02-10 17:04:08,870 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,870 INFO sqlalchemy.engine.Engine INSERT INTO users (user_id, password, name, sex, birth_date, created_at, user_email) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?), (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?) RETURNING created_at, user_id
+2026-02-10 17:04:08,870 INFO sqlalchemy.engine.Engine [generated in 0.00004s (insertmanyvalues) 1/1 (ordered)] ('dad', 'pw', '아빠', None, None, 'dad@e.com', 'son', 'pw', '아들', None, None, 'son@e.com')
+2026-02-10 17:04:08,871 INFO sqlalchemy.engine.Engine COMMIT
+2026-02-10 17:04:08,871 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,871 INFO sqlalchemy.engine.Engine INSERT INTO parent_child (parent_user_id, child_user_id) VALUES (?, ?)
+2026-02-10 17:04:08,871 INFO sqlalchemy.engine.Engine [generated in 0.00005s] ('dad', 'son')
+2026-02-10 17:04:08,871 INFO sqlalchemy.engine.Engine COMMIT
+2026-02-10 17:04:08,871 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,871 INFO sqlalchemy.engine.Engine SELECT parent_child.parent_user_id AS parent_child_parent_user_id, parent_child.child_user_id AS parent_child_child_user_id 
+FROM parent_child 
+WHERE parent_child.parent_user_id = ?
+ LIMIT ? OFFSET ?
+2026-02-10 17:04:08,871 INFO sqlalchemy.engine.Engine [generated in 0.00005s] ('dad', 1, 0)
+PASSED2026-02-10 17:04:08,872 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-02-10 17:04:08,872 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,872 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("complaints")
+2026-02-10 17:04:08,872 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,872 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("videos")
+2026-02-10 17:04:08,872 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,872 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("watch_history")
+2026-02-10 17:04:08,872 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,872 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("ai_reports")
+2026-02-10 17:04:08,872 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,872 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("users")
+2026-02-10 17:04:08,872 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,872 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("user_youtubes")
+2026-02-10 17:04:08,872 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,872 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("parent_child")
+2026-02-10 17:04:08,872 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,872 INFO sqlalchemy.engine.Engine 
+DROP TABLE complaints
+2026-02-10 17:04:08,872 INFO sqlalchemy.engine.Engine [no key 0.00003s] ()
+2026-02-10 17:04:08,872 INFO sqlalchemy.engine.Engine 
+DROP TABLE parent_child
+2026-02-10 17:04:08,873 INFO sqlalchemy.engine.Engine [no key 0.00003s] ()
+2026-02-10 17:04:08,873 INFO sqlalchemy.engine.Engine 
+DROP TABLE user_youtubes
+2026-02-10 17:04:08,873 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,873 INFO sqlalchemy.engine.Engine 
+DROP TABLE ai_reports
+2026-02-10 17:04:08,873 INFO sqlalchemy.engine.Engine [no key 0.00003s] ()
+2026-02-10 17:04:08,873 INFO sqlalchemy.engine.Engine 
+DROP TABLE watch_history
+2026-02-10 17:04:08,873 INFO sqlalchemy.engine.Engine [no key 0.00003s] ()
+2026-02-10 17:04:08,873 INFO sqlalchemy.engine.Engine 
+DROP TABLE users
+2026-02-10 17:04:08,873 INFO sqlalchemy.engine.Engine [no key 0.00003s] ()
+2026-02-10 17:04:08,873 INFO sqlalchemy.engine.Engine 
+DROP TABLE videos
+2026-02-10 17:04:08,873 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,873 INFO sqlalchemy.engine.Engine COMMIT
+
+tests/features/user/test_user_repository.py::test_user_crud 2026-02-10 17:04:08,873 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,873 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("complaints")
+2026-02-10 17:04:08,873 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,873 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("complaints")
+2026-02-10 17:04:08,873 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,873 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("videos")
+2026-02-10 17:04:08,873 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,873 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("videos")
+2026-02-10 17:04:08,874 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,874 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("watch_history")
+2026-02-10 17:04:08,874 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,874 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("watch_history")
+2026-02-10 17:04:08,874 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,874 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("ai_reports")
+2026-02-10 17:04:08,874 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,874 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("ai_reports")
+2026-02-10 17:04:08,874 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,874 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("users")
+2026-02-10 17:04:08,874 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,874 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("users")
+2026-02-10 17:04:08,874 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,874 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("user_youtubes")
+2026-02-10 17:04:08,874 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,874 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("user_youtubes")
+2026-02-10 17:04:08,874 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,874 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("parent_child")
+2026-02-10 17:04:08,874 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,874 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("parent_child")
+2026-02-10 17:04:08,874 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,874 INFO sqlalchemy.engine.Engine 
+CREATE TABLE videos (
+	video_id VARCHAR(255) NOT NULL, 
+	video_title VARCHAR(255), 
+	channel VARCHAR(255), 
+	upload_date DATETIME, 
+	video_script TEXT, 
+	video_runtime INTEGER, 
+	thumbnail VARCHAR(500), 
+	youtube_url VARCHAR(500), 
+	saved_url VARCHAR(500), 
+	status VARCHAR(20), 
+	PRIMARY KEY (video_id), 
+	CONSTRAINT chk_video_status CHECK (status IN ('SAFE', 'HARMFUL', 'PENDING'))
+)
+
+
+2026-02-10 17:04:08,874 INFO sqlalchemy.engine.Engine [no key 0.00003s] ()
+2026-02-10 17:04:08,874 INFO sqlalchemy.engine.Engine 
+CREATE TABLE users (
+	user_id VARCHAR(255) NOT NULL, 
+	password VARCHAR(255) NOT NULL, 
+	name VARCHAR(100) NOT NULL, 
+	sex VARCHAR(10), 
+	birth_date DATE, 
+	created_at DATETIME, 
+	user_email VARCHAR(255) NOT NULL, 
+	PRIMARY KEY (user_id), 
+	CONSTRAINT chk_sex CHECK (sex IN ('M', 'F')), 
+	UNIQUE (user_email)
+)
+
+
+2026-02-10 17:04:08,874 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,875 INFO sqlalchemy.engine.Engine 
+CREATE TABLE watch_history (
+	history_id VARCHAR(255) NOT NULL, 
+	user_id VARCHAR(255) NOT NULL, 
+	video_id VARCHAR(255) NOT NULL, 
+	watched_at DATETIME, 
+	PRIMARY KEY (history_id), 
+	FOREIGN KEY(user_id) REFERENCES users (user_id) ON DELETE CASCADE, 
+	FOREIGN KEY(video_id) REFERENCES videos (video_id) ON DELETE CASCADE
+)
+
+
+2026-02-10 17:04:08,875 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,875 INFO sqlalchemy.engine.Engine CREATE INDEX idx_watch_time ON watch_history (watched_at)
+2026-02-10 17:04:08,875 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,875 INFO sqlalchemy.engine.Engine CREATE INDEX idx_watch_video ON watch_history (video_id)
+2026-02-10 17:04:08,875 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,875 INFO sqlalchemy.engine.Engine CREATE INDEX idx_watch_user ON watch_history (user_id)
+2026-02-10 17:04:08,875 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,875 INFO sqlalchemy.engine.Engine 
+CREATE TABLE ai_reports (
+	report_id VARCHAR(255) NOT NULL, 
+	video_id VARCHAR(255) NOT NULL, 
+	legal_report TEXT, 
+	fact_report TEXT, 
+	is_generated_by TEXT, 
+	summary TEXT, 
+	created_at DATETIME, 
+	PRIMARY KEY (report_id), 
+	UNIQUE (video_id), 
+	FOREIGN KEY(video_id) REFERENCES videos (video_id) ON DELETE CASCADE
+)
+
+
+2026-02-10 17:04:08,875 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,875 INFO sqlalchemy.engine.Engine 
+CREATE TABLE user_youtubes (
+	youtube_account_id VARCHAR(255) NOT NULL, 
+	youtube_email VARCHAR(255), 
+	youtube_nickname VARCHAR(255), 
+	user_id VARCHAR(255) NOT NULL, 
+	PRIMARY KEY (youtube_account_id), 
+	UNIQUE (youtube_email), 
+	FOREIGN KEY(user_id) REFERENCES users (user_id) ON DELETE CASCADE
+)
+
+
+2026-02-10 17:04:08,875 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,875 INFO sqlalchemy.engine.Engine 
+CREATE TABLE parent_child (
+	parent_user_id VARCHAR(255) NOT NULL, 
+	child_user_id VARCHAR(255) NOT NULL, 
+	PRIMARY KEY (parent_user_id, child_user_id), 
+	FOREIGN KEY(parent_user_id) REFERENCES users (user_id) ON DELETE CASCADE, 
+	FOREIGN KEY(child_user_id) REFERENCES users (user_id) ON DELETE CASCADE
+)
+
+
+2026-02-10 17:04:08,875 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,875 INFO sqlalchemy.engine.Engine 
+CREATE TABLE complaints (
+	complaint_id VARCHAR(255) NOT NULL, 
+	video_id VARCHAR(255) NOT NULL, 
+	report_id VARCHAR(255), 
+	complaint_date DATETIME, 
+	complaint_content TEXT, 
+	complaint_target VARCHAR(255), 
+	PRIMARY KEY (complaint_id), 
+	FOREIGN KEY(video_id) REFERENCES videos (video_id) ON DELETE CASCADE, 
+	FOREIGN KEY(report_id) REFERENCES ai_reports (report_id) ON DELETE SET NULL
+)
+
+
+2026-02-10 17:04:08,875 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,875 INFO sqlalchemy.engine.Engine COMMIT
+2026-02-10 17:04:08,875 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,875 INFO sqlalchemy.engine.Engine INSERT INTO users (user_id, password, name, sex, birth_date, created_at, user_email) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?) RETURNING created_at
+2026-02-10 17:04:08,875 INFO sqlalchemy.engine.Engine [cached since 0.01441s ago] ('u1', 'pw', '테스트', 'M', None, 't@t.com')
+2026-02-10 17:04:08,876 INFO sqlalchemy.engine.Engine COMMIT
+2026-02-10 17:04:08,876 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,876 INFO sqlalchemy.engine.Engine SELECT users.user_id, users.password, users.name, users.sex, users.birth_date, users.created_at, users.user_email 
+FROM users 
+WHERE users.user_id = ?
+2026-02-10 17:04:08,876 INFO sqlalchemy.engine.Engine [generated in 0.00003s] ('u1',)
+2026-02-10 17:04:08,876 INFO sqlalchemy.engine.Engine SELECT users.user_id AS users_user_id, users.password AS users_password, users.name AS users_name, users.sex AS users_sex, users.birth_date AS users_birth_date, users.created_at AS users_created_at, users.user_email AS users_user_email 
+FROM users 
+WHERE users.user_email = ?
+ LIMIT ? OFFSET ?
+2026-02-10 17:04:08,876 INFO sqlalchemy.engine.Engine [generated in 0.00004s] ('t@t.com', 1, 0)
+2026-02-10 17:04:08,876 INFO sqlalchemy.engine.Engine UPDATE users SET name=? WHERE users.user_id = ?
+2026-02-10 17:04:08,876 INFO sqlalchemy.engine.Engine [generated in 0.00003s] ('수정된이름', 'u1')
+2026-02-10 17:04:08,876 INFO sqlalchemy.engine.Engine COMMIT
+2026-02-10 17:04:08,877 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,877 INFO sqlalchemy.engine.Engine SELECT users.user_id, users.password, users.name, users.sex, users.birth_date, users.created_at, users.user_email 
+FROM users 
+WHERE users.user_id = ?
+2026-02-10 17:04:08,877 INFO sqlalchemy.engine.Engine [cached since 0.0009379s ago] ('u1',)
+2026-02-10 17:04:08,877 INFO sqlalchemy.engine.Engine SELECT users.user_id AS users_user_id, users.password AS users_password, users.name AS users_name, users.sex AS users_sex, users.birth_date AS users_birth_date, users.created_at AS users_created_at, users.user_email AS users_user_email 
+FROM users 
+WHERE users.user_id = ?
+ LIMIT ? OFFSET ?
+2026-02-10 17:04:08,877 INFO sqlalchemy.engine.Engine [cached since 0.01532s ago] ('u1', 1, 0)
+2026-02-10 17:04:08,877 INFO sqlalchemy.engine.Engine DELETE FROM users WHERE users.user_id = ?
+2026-02-10 17:04:08,877 INFO sqlalchemy.engine.Engine [cached since 0.01518s ago] ('u1',)
+2026-02-10 17:04:08,877 INFO sqlalchemy.engine.Engine COMMIT
+2026-02-10 17:04:08,877 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,877 INFO sqlalchemy.engine.Engine SELECT users.user_id AS users_user_id, users.password AS users_password, users.name AS users_name, users.sex AS users_sex, users.birth_date AS users_birth_date, users.created_at AS users_created_at, users.user_email AS users_user_email 
+FROM users 
+WHERE users.user_id = ?
+ LIMIT ? OFFSET ?
+2026-02-10 17:04:08,877 INFO sqlalchemy.engine.Engine [cached since 0.01564s ago] ('u1', 1, 0)
+PASSED2026-02-10 17:04:08,877 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-02-10 17:04:08,877 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,877 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("complaints")
+2026-02-10 17:04:08,877 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,877 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("videos")
+2026-02-10 17:04:08,877 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,877 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("watch_history")
+2026-02-10 17:04:08,877 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,878 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("ai_reports")
+2026-02-10 17:04:08,878 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,878 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("users")
+2026-02-10 17:04:08,878 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,878 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("user_youtubes")
+2026-02-10 17:04:08,878 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,878 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("parent_child")
+2026-02-10 17:04:08,878 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,878 INFO sqlalchemy.engine.Engine 
+DROP TABLE complaints
+2026-02-10 17:04:08,878 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,878 INFO sqlalchemy.engine.Engine 
+DROP TABLE parent_child
+2026-02-10 17:04:08,878 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,878 INFO sqlalchemy.engine.Engine 
+DROP TABLE user_youtubes
+2026-02-10 17:04:08,878 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,878 INFO sqlalchemy.engine.Engine 
+DROP TABLE ai_reports
+2026-02-10 17:04:08,878 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,878 INFO sqlalchemy.engine.Engine 
+DROP TABLE watch_history
+2026-02-10 17:04:08,878 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,878 INFO sqlalchemy.engine.Engine 
+DROP TABLE users
+2026-02-10 17:04:08,878 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,878 INFO sqlalchemy.engine.Engine 
+DROP TABLE videos
+2026-02-10 17:04:08,878 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,878 INFO sqlalchemy.engine.Engine COMMIT
+
+tests/features/user/test_user_repository.py::test_user_relations 2026-02-10 17:04:08,878 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,878 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("complaints")
+2026-02-10 17:04:08,878 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,878 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("complaints")
+2026-02-10 17:04:08,879 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,879 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("videos")
+2026-02-10 17:04:08,879 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,879 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("videos")
+2026-02-10 17:04:08,879 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,879 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("watch_history")
+2026-02-10 17:04:08,879 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,879 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("watch_history")
+2026-02-10 17:04:08,879 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,879 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("ai_reports")
+2026-02-10 17:04:08,879 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,879 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("ai_reports")
+2026-02-10 17:04:08,879 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,879 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("users")
+2026-02-10 17:04:08,879 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,879 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("users")
+2026-02-10 17:04:08,879 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,879 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("user_youtubes")
+2026-02-10 17:04:08,879 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,879 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("user_youtubes")
+2026-02-10 17:04:08,879 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,879 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("parent_child")
+2026-02-10 17:04:08,879 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,879 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("parent_child")
+2026-02-10 17:04:08,879 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,879 INFO sqlalchemy.engine.Engine 
+CREATE TABLE videos (
+	video_id VARCHAR(255) NOT NULL, 
+	video_title VARCHAR(255), 
+	channel VARCHAR(255), 
+	upload_date DATETIME, 
+	video_script TEXT, 
+	video_runtime INTEGER, 
+	thumbnail VARCHAR(500), 
+	youtube_url VARCHAR(500), 
+	saved_url VARCHAR(500), 
+	status VARCHAR(20), 
+	PRIMARY KEY (video_id), 
+	CONSTRAINT chk_video_status CHECK (status IN ('SAFE', 'HARMFUL', 'PENDING'))
+)
+
+
+2026-02-10 17:04:08,879 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,879 INFO sqlalchemy.engine.Engine 
+CREATE TABLE users (
+	user_id VARCHAR(255) NOT NULL, 
+	password VARCHAR(255) NOT NULL, 
+	name VARCHAR(100) NOT NULL, 
+	sex VARCHAR(10), 
+	birth_date DATE, 
+	created_at DATETIME, 
+	user_email VARCHAR(255) NOT NULL, 
+	PRIMARY KEY (user_id), 
+	CONSTRAINT chk_sex CHECK (sex IN ('M', 'F')), 
+	UNIQUE (user_email)
+)
+
+
+2026-02-10 17:04:08,879 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,879 INFO sqlalchemy.engine.Engine 
+CREATE TABLE watch_history (
+	history_id VARCHAR(255) NOT NULL, 
+	user_id VARCHAR(255) NOT NULL, 
+	video_id VARCHAR(255) NOT NULL, 
+	watched_at DATETIME, 
+	PRIMARY KEY (history_id), 
+	FOREIGN KEY(user_id) REFERENCES users (user_id) ON DELETE CASCADE, 
+	FOREIGN KEY(video_id) REFERENCES videos (video_id) ON DELETE CASCADE
+)
+
+
+2026-02-10 17:04:08,879 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,880 INFO sqlalchemy.engine.Engine CREATE INDEX idx_watch_time ON watch_history (watched_at)
+2026-02-10 17:04:08,880 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,880 INFO sqlalchemy.engine.Engine CREATE INDEX idx_watch_video ON watch_history (video_id)
+2026-02-10 17:04:08,880 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,880 INFO sqlalchemy.engine.Engine CREATE INDEX idx_watch_user ON watch_history (user_id)
+2026-02-10 17:04:08,880 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,880 INFO sqlalchemy.engine.Engine 
+CREATE TABLE ai_reports (
+	report_id VARCHAR(255) NOT NULL, 
+	video_id VARCHAR(255) NOT NULL, 
+	legal_report TEXT, 
+	fact_report TEXT, 
+	is_generated_by TEXT, 
+	summary TEXT, 
+	created_at DATETIME, 
+	PRIMARY KEY (report_id), 
+	UNIQUE (video_id), 
+	FOREIGN KEY(video_id) REFERENCES videos (video_id) ON DELETE CASCADE
+)
+
+
+2026-02-10 17:04:08,880 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,880 INFO sqlalchemy.engine.Engine 
+CREATE TABLE user_youtubes (
+	youtube_account_id VARCHAR(255) NOT NULL, 
+	youtube_email VARCHAR(255), 
+	youtube_nickname VARCHAR(255), 
+	user_id VARCHAR(255) NOT NULL, 
+	PRIMARY KEY (youtube_account_id), 
+	UNIQUE (youtube_email), 
+	FOREIGN KEY(user_id) REFERENCES users (user_id) ON DELETE CASCADE
+)
+
+
+2026-02-10 17:04:08,880 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,880 INFO sqlalchemy.engine.Engine 
+CREATE TABLE parent_child (
+	parent_user_id VARCHAR(255) NOT NULL, 
+	child_user_id VARCHAR(255) NOT NULL, 
+	PRIMARY KEY (parent_user_id, child_user_id), 
+	FOREIGN KEY(parent_user_id) REFERENCES users (user_id) ON DELETE CASCADE, 
+	FOREIGN KEY(child_user_id) REFERENCES users (user_id) ON DELETE CASCADE
+)
+
+
+2026-02-10 17:04:08,880 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,880 INFO sqlalchemy.engine.Engine 
+CREATE TABLE complaints (
+	complaint_id VARCHAR(255) NOT NULL, 
+	video_id VARCHAR(255) NOT NULL, 
+	report_id VARCHAR(255), 
+	complaint_date DATETIME, 
+	complaint_content TEXT, 
+	complaint_target VARCHAR(255), 
+	PRIMARY KEY (complaint_id), 
+	FOREIGN KEY(video_id) REFERENCES videos (video_id) ON DELETE CASCADE, 
+	FOREIGN KEY(report_id) REFERENCES ai_reports (report_id) ON DELETE SET NULL
+)
+
+
+2026-02-10 17:04:08,880 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,880 INFO sqlalchemy.engine.Engine COMMIT
+2026-02-10 17:04:08,880 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,880 INFO sqlalchemy.engine.Engine INSERT INTO users (user_id, password, name, sex, birth_date, created_at, user_email) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?) RETURNING created_at
+2026-02-10 17:04:08,880 INFO sqlalchemy.engine.Engine [cached since 0.01934s ago] ('dad', 'pw', '아빠', 'M', None, 'd@d.com')
+2026-02-10 17:04:08,880 INFO sqlalchemy.engine.Engine COMMIT
+2026-02-10 17:04:08,881 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,881 INFO sqlalchemy.engine.Engine SELECT users.user_id, users.password, users.name, users.sex, users.birth_date, users.created_at, users.user_email 
+FROM users 
+WHERE users.user_id = ?
+2026-02-10 17:04:08,881 INFO sqlalchemy.engine.Engine [cached since 0.004829s ago] ('dad',)
+2026-02-10 17:04:08,881 INFO sqlalchemy.engine.Engine INSERT INTO users (user_id, password, name, sex, birth_date, created_at, user_email) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?) RETURNING created_at
+2026-02-10 17:04:08,881 INFO sqlalchemy.engine.Engine [cached since 0.01975s ago] ('son', 'pw', '아들', 'M', None, 's@s.com')
+2026-02-10 17:04:08,881 INFO sqlalchemy.engine.Engine COMMIT
+2026-02-10 17:04:08,881 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,881 INFO sqlalchemy.engine.Engine SELECT users.user_id, users.password, users.name, users.sex, users.birth_date, users.created_at, users.user_email 
+FROM users 
+WHERE users.user_id = ?
+2026-02-10 17:04:08,881 INFO sqlalchemy.engine.Engine [cached since 0.00521s ago] ('son',)
+2026-02-10 17:04:08,881 INFO sqlalchemy.engine.Engine INSERT INTO user_youtubes (youtube_account_id, youtube_email, youtube_nickname, user_id) VALUES (?, ?, ?, ?)
+2026-02-10 17:04:08,881 INFO sqlalchemy.engine.Engine [cached since 0.01514s ago] ('yt_1', 'yt@g.com', '아빠TV', 'dad')
+2026-02-10 17:04:08,881 INFO sqlalchemy.engine.Engine COMMIT
+2026-02-10 17:04:08,881 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,881 INFO sqlalchemy.engine.Engine SELECT user_youtubes.youtube_account_id, user_youtubes.youtube_email, user_youtubes.youtube_nickname, user_youtubes.user_id 
+FROM user_youtubes 
+WHERE user_youtubes.youtube_account_id = ?
+2026-02-10 17:04:08,881 INFO sqlalchemy.engine.Engine [generated in 0.00004s] ('yt_1',)
+2026-02-10 17:04:08,882 INFO sqlalchemy.engine.Engine SELECT user_youtubes.youtube_account_id AS user_youtubes_youtube_account_id, user_youtubes.youtube_email AS user_youtubes_youtube_email, user_youtubes.youtube_nickname AS user_youtubes_youtube_nickname, user_youtubes.user_id AS user_youtubes_user_id 
+FROM user_youtubes 
+WHERE user_youtubes.user_id = ?
+2026-02-10 17:04:08,882 INFO sqlalchemy.engine.Engine [generated in 0.00004s] ('dad',)
+2026-02-10 17:04:08,882 INFO sqlalchemy.engine.Engine INSERT INTO parent_child (parent_user_id, child_user_id) VALUES (?, ?)
+2026-02-10 17:04:08,882 INFO sqlalchemy.engine.Engine [cached since 0.01093s ago] ('dad', 'son')
+2026-02-10 17:04:08,882 INFO sqlalchemy.engine.Engine COMMIT
+2026-02-10 17:04:08,882 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,882 INFO sqlalchemy.engine.Engine SELECT parent_child.parent_user_id, parent_child.child_user_id 
+FROM parent_child 
+WHERE parent_child.parent_user_id = ? AND parent_child.child_user_id = ?
+2026-02-10 17:04:08,882 INFO sqlalchemy.engine.Engine [generated in 0.00003s] ('dad', 'son')
+2026-02-10 17:04:08,882 INFO sqlalchemy.engine.Engine SELECT parent_child.parent_user_id AS parent_child_parent_user_id, parent_child.child_user_id AS parent_child_child_user_id 
+FROM parent_child 
+WHERE parent_child.parent_user_id = ?
+2026-02-10 17:04:08,882 INFO sqlalchemy.engine.Engine [generated in 0.00003s] ('dad',)
+PASSED2026-02-10 17:04:08,883 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-02-10 17:04:08,883 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,883 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("complaints")
+2026-02-10 17:04:08,883 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,883 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("videos")
+2026-02-10 17:04:08,883 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,883 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("watch_history")
+2026-02-10 17:04:08,883 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,883 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("ai_reports")
+2026-02-10 17:04:08,883 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,883 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("users")
+2026-02-10 17:04:08,883 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,883 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("user_youtubes")
+2026-02-10 17:04:08,883 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,883 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("parent_child")
+2026-02-10 17:04:08,883 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,883 INFO sqlalchemy.engine.Engine 
+DROP TABLE complaints
+2026-02-10 17:04:08,883 INFO sqlalchemy.engine.Engine [no key 0.00003s] ()
+2026-02-10 17:04:08,883 INFO sqlalchemy.engine.Engine 
+DROP TABLE parent_child
+2026-02-10 17:04:08,883 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,883 INFO sqlalchemy.engine.Engine 
+DROP TABLE user_youtubes
+2026-02-10 17:04:08,883 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,883 INFO sqlalchemy.engine.Engine 
+DROP TABLE ai_reports
+2026-02-10 17:04:08,883 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,883 INFO sqlalchemy.engine.Engine 
+DROP TABLE watch_history
+2026-02-10 17:04:08,883 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,883 INFO sqlalchemy.engine.Engine 
+DROP TABLE users
+2026-02-10 17:04:08,883 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,883 INFO sqlalchemy.engine.Engine 
+DROP TABLE videos
+2026-02-10 17:04:08,884 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,884 INFO sqlalchemy.engine.Engine COMMIT
+
+tests/features/video/test_video_model.py::test_video_flow 2026-02-10 17:04:08,884 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,884 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("complaints")
+2026-02-10 17:04:08,884 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,884 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("complaints")
+2026-02-10 17:04:08,884 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,884 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("videos")
+2026-02-10 17:04:08,884 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,884 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("videos")
+2026-02-10 17:04:08,884 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,884 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("watch_history")
+2026-02-10 17:04:08,884 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,884 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("watch_history")
+2026-02-10 17:04:08,884 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,884 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("ai_reports")
+2026-02-10 17:04:08,884 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,884 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("ai_reports")
+2026-02-10 17:04:08,884 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,884 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("users")
+2026-02-10 17:04:08,884 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,884 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("users")
+2026-02-10 17:04:08,884 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,884 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("user_youtubes")
+2026-02-10 17:04:08,884 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,884 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("user_youtubes")
+2026-02-10 17:04:08,884 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,885 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("parent_child")
+2026-02-10 17:04:08,885 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,885 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("parent_child")
+2026-02-10 17:04:08,885 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,885 INFO sqlalchemy.engine.Engine 
+CREATE TABLE videos (
+	video_id VARCHAR(255) NOT NULL, 
+	video_title VARCHAR(255), 
+	channel VARCHAR(255), 
+	upload_date DATETIME, 
+	video_script TEXT, 
+	video_runtime INTEGER, 
+	thumbnail VARCHAR(500), 
+	youtube_url VARCHAR(500), 
+	saved_url VARCHAR(500), 
+	status VARCHAR(20), 
+	PRIMARY KEY (video_id), 
+	CONSTRAINT chk_video_status CHECK (status IN ('SAFE', 'HARMFUL', 'PENDING'))
+)
+
+
+2026-02-10 17:04:08,885 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,885 INFO sqlalchemy.engine.Engine 
+CREATE TABLE users (
+	user_id VARCHAR(255) NOT NULL, 
+	password VARCHAR(255) NOT NULL, 
+	name VARCHAR(100) NOT NULL, 
+	sex VARCHAR(10), 
+	birth_date DATE, 
+	created_at DATETIME, 
+	user_email VARCHAR(255) NOT NULL, 
+	PRIMARY KEY (user_id), 
+	CONSTRAINT chk_sex CHECK (sex IN ('M', 'F')), 
+	UNIQUE (user_email)
+)
+
+
+2026-02-10 17:04:08,885 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,885 INFO sqlalchemy.engine.Engine 
+CREATE TABLE watch_history (
+	history_id VARCHAR(255) NOT NULL, 
+	user_id VARCHAR(255) NOT NULL, 
+	video_id VARCHAR(255) NOT NULL, 
+	watched_at DATETIME, 
+	PRIMARY KEY (history_id), 
+	FOREIGN KEY(user_id) REFERENCES users (user_id) ON DELETE CASCADE, 
+	FOREIGN KEY(video_id) REFERENCES videos (video_id) ON DELETE CASCADE
+)
+
+
+2026-02-10 17:04:08,885 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,885 INFO sqlalchemy.engine.Engine CREATE INDEX idx_watch_time ON watch_history (watched_at)
+2026-02-10 17:04:08,885 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,885 INFO sqlalchemy.engine.Engine CREATE INDEX idx_watch_video ON watch_history (video_id)
+2026-02-10 17:04:08,885 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,885 INFO sqlalchemy.engine.Engine CREATE INDEX idx_watch_user ON watch_history (user_id)
+2026-02-10 17:04:08,885 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,885 INFO sqlalchemy.engine.Engine 
+CREATE TABLE ai_reports (
+	report_id VARCHAR(255) NOT NULL, 
+	video_id VARCHAR(255) NOT NULL, 
+	legal_report TEXT, 
+	fact_report TEXT, 
+	is_generated_by TEXT, 
+	summary TEXT, 
+	created_at DATETIME, 
+	PRIMARY KEY (report_id), 
+	UNIQUE (video_id), 
+	FOREIGN KEY(video_id) REFERENCES videos (video_id) ON DELETE CASCADE
+)
+
+
+2026-02-10 17:04:08,885 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,885 INFO sqlalchemy.engine.Engine 
+CREATE TABLE user_youtubes (
+	youtube_account_id VARCHAR(255) NOT NULL, 
+	youtube_email VARCHAR(255), 
+	youtube_nickname VARCHAR(255), 
+	user_id VARCHAR(255) NOT NULL, 
+	PRIMARY KEY (youtube_account_id), 
+	UNIQUE (youtube_email), 
+	FOREIGN KEY(user_id) REFERENCES users (user_id) ON DELETE CASCADE
+)
+
+
+2026-02-10 17:04:08,885 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,885 INFO sqlalchemy.engine.Engine 
+CREATE TABLE parent_child (
+	parent_user_id VARCHAR(255) NOT NULL, 
+	child_user_id VARCHAR(255) NOT NULL, 
+	PRIMARY KEY (parent_user_id, child_user_id), 
+	FOREIGN KEY(parent_user_id) REFERENCES users (user_id) ON DELETE CASCADE, 
+	FOREIGN KEY(child_user_id) REFERENCES users (user_id) ON DELETE CASCADE
+)
+
+
+2026-02-10 17:04:08,885 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,886 INFO sqlalchemy.engine.Engine 
+CREATE TABLE complaints (
+	complaint_id VARCHAR(255) NOT NULL, 
+	video_id VARCHAR(255) NOT NULL, 
+	report_id VARCHAR(255), 
+	complaint_date DATETIME, 
+	complaint_content TEXT, 
+	complaint_target VARCHAR(255), 
+	PRIMARY KEY (complaint_id), 
+	FOREIGN KEY(video_id) REFERENCES videos (video_id) ON DELETE CASCADE, 
+	FOREIGN KEY(report_id) REFERENCES ai_reports (report_id) ON DELETE SET NULL
+)
+
+
+2026-02-10 17:04:08,886 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,886 INFO sqlalchemy.engine.Engine COMMIT
+2026-02-10 17:04:08,886 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,886 INFO sqlalchemy.engine.Engine INSERT INTO videos (video_id, video_title, channel, upload_date, video_script, video_runtime, thumbnail, youtube_url, saved_url, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-10 17:04:08,886 INFO sqlalchemy.engine.Engine [cached since 0.04607s ago] ('vid_123', '재밌는 영상', '김유튜브', None, None, 600, None, None, None, 'SAFE')
+2026-02-10 17:04:08,886 INFO sqlalchemy.engine.Engine COMMIT
+2026-02-10 17:04:08,886 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,886 INFO sqlalchemy.engine.Engine SELECT videos.video_id AS videos_video_id, videos.video_title AS videos_video_title, videos.channel AS videos_channel, videos.upload_date AS videos_upload_date, videos.video_script AS videos_video_script, videos.video_runtime AS videos_video_runtime, videos.thumbnail AS videos_thumbnail, videos.youtube_url AS videos_youtube_url, videos.saved_url AS videos_saved_url, videos.status AS videos_status 
+FROM videos 
+WHERE videos.video_id = ?
+ LIMIT ? OFFSET ?
+2026-02-10 17:04:08,886 INFO sqlalchemy.engine.Engine [generated in 0.00004s] ('vid_123', 1, 0)
+2026-02-10 17:04:08,886 INFO sqlalchemy.engine.Engine DELETE FROM videos WHERE videos.video_id = ?
+2026-02-10 17:04:08,886 INFO sqlalchemy.engine.Engine [generated in 0.00003s] ('vid_123',)
+2026-02-10 17:04:08,887 INFO sqlalchemy.engine.Engine COMMIT
+2026-02-10 17:04:08,887 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,887 INFO sqlalchemy.engine.Engine SELECT videos.video_id AS videos_video_id, videos.video_title AS videos_video_title, videos.channel AS videos_channel, videos.upload_date AS videos_upload_date, videos.video_script AS videos_video_script, videos.video_runtime AS videos_video_runtime, videos.thumbnail AS videos_thumbnail, videos.youtube_url AS videos_youtube_url, videos.saved_url AS videos_saved_url, videos.status AS videos_status 
+FROM videos 
+WHERE videos.video_id = ?
+ LIMIT ? OFFSET ?
+2026-02-10 17:04:08,887 INFO sqlalchemy.engine.Engine [cached since 0.0004617s ago] ('vid_123', 1, 0)
+PASSED2026-02-10 17:04:08,887 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-02-10 17:04:08,887 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,887 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("complaints")
+2026-02-10 17:04:08,887 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,887 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("videos")
+2026-02-10 17:04:08,887 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,887 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("watch_history")
+2026-02-10 17:04:08,887 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,887 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("ai_reports")
+2026-02-10 17:04:08,887 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,887 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("users")
+2026-02-10 17:04:08,887 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,887 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("user_youtubes")
+2026-02-10 17:04:08,887 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,887 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("parent_child")
+2026-02-10 17:04:08,887 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,887 INFO sqlalchemy.engine.Engine 
+DROP TABLE complaints
+2026-02-10 17:04:08,887 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,887 INFO sqlalchemy.engine.Engine 
+DROP TABLE parent_child
+2026-02-10 17:04:08,887 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,887 INFO sqlalchemy.engine.Engine 
+DROP TABLE user_youtubes
+2026-02-10 17:04:08,887 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,887 INFO sqlalchemy.engine.Engine 
+DROP TABLE ai_reports
+2026-02-10 17:04:08,887 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,888 INFO sqlalchemy.engine.Engine 
+DROP TABLE watch_history
+2026-02-10 17:04:08,888 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,888 INFO sqlalchemy.engine.Engine 
+DROP TABLE users
+2026-02-10 17:04:08,888 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,888 INFO sqlalchemy.engine.Engine 
+DROP TABLE videos
+2026-02-10 17:04:08,888 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,888 INFO sqlalchemy.engine.Engine COMMIT
+
+tests/features/video/test_video_model.py::test_watch_history 2026-02-10 17:04:08,888 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,888 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("complaints")
+2026-02-10 17:04:08,888 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,888 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("complaints")
+2026-02-10 17:04:08,888 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,888 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("videos")
+2026-02-10 17:04:08,888 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,888 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("videos")
+2026-02-10 17:04:08,888 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,888 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("watch_history")
+2026-02-10 17:04:08,888 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,888 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("watch_history")
+2026-02-10 17:04:08,888 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,888 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("ai_reports")
+2026-02-10 17:04:08,888 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,888 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("ai_reports")
+2026-02-10 17:04:08,888 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,888 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("users")
+2026-02-10 17:04:08,888 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,888 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("users")
+2026-02-10 17:04:08,888 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,888 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("user_youtubes")
+2026-02-10 17:04:08,888 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,888 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("user_youtubes")
+2026-02-10 17:04:08,888 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,888 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("parent_child")
+2026-02-10 17:04:08,889 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,889 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("parent_child")
+2026-02-10 17:04:08,889 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,889 INFO sqlalchemy.engine.Engine 
+CREATE TABLE videos (
+	video_id VARCHAR(255) NOT NULL, 
+	video_title VARCHAR(255), 
+	channel VARCHAR(255), 
+	upload_date DATETIME, 
+	video_script TEXT, 
+	video_runtime INTEGER, 
+	thumbnail VARCHAR(500), 
+	youtube_url VARCHAR(500), 
+	saved_url VARCHAR(500), 
+	status VARCHAR(20), 
+	PRIMARY KEY (video_id), 
+	CONSTRAINT chk_video_status CHECK (status IN ('SAFE', 'HARMFUL', 'PENDING'))
+)
+
+
+2026-02-10 17:04:08,889 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,889 INFO sqlalchemy.engine.Engine 
+CREATE TABLE users (
+	user_id VARCHAR(255) NOT NULL, 
+	password VARCHAR(255) NOT NULL, 
+	name VARCHAR(100) NOT NULL, 
+	sex VARCHAR(10), 
+	birth_date DATE, 
+	created_at DATETIME, 
+	user_email VARCHAR(255) NOT NULL, 
+	PRIMARY KEY (user_id), 
+	CONSTRAINT chk_sex CHECK (sex IN ('M', 'F')), 
+	UNIQUE (user_email)
+)
+
+
+2026-02-10 17:04:08,889 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,889 INFO sqlalchemy.engine.Engine 
+CREATE TABLE watch_history (
+	history_id VARCHAR(255) NOT NULL, 
+	user_id VARCHAR(255) NOT NULL, 
+	video_id VARCHAR(255) NOT NULL, 
+	watched_at DATETIME, 
+	PRIMARY KEY (history_id), 
+	FOREIGN KEY(user_id) REFERENCES users (user_id) ON DELETE CASCADE, 
+	FOREIGN KEY(video_id) REFERENCES videos (video_id) ON DELETE CASCADE
+)
+
+
+2026-02-10 17:04:08,889 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,889 INFO sqlalchemy.engine.Engine CREATE INDEX idx_watch_time ON watch_history (watched_at)
+2026-02-10 17:04:08,889 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,889 INFO sqlalchemy.engine.Engine CREATE INDEX idx_watch_video ON watch_history (video_id)
+2026-02-10 17:04:08,889 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,889 INFO sqlalchemy.engine.Engine CREATE INDEX idx_watch_user ON watch_history (user_id)
+2026-02-10 17:04:08,889 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,889 INFO sqlalchemy.engine.Engine 
+CREATE TABLE ai_reports (
+	report_id VARCHAR(255) NOT NULL, 
+	video_id VARCHAR(255) NOT NULL, 
+	legal_report TEXT, 
+	fact_report TEXT, 
+	is_generated_by TEXT, 
+	summary TEXT, 
+	created_at DATETIME, 
+	PRIMARY KEY (report_id), 
+	UNIQUE (video_id), 
+	FOREIGN KEY(video_id) REFERENCES videos (video_id) ON DELETE CASCADE
+)
+
+
+2026-02-10 17:04:08,889 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,889 INFO sqlalchemy.engine.Engine 
+CREATE TABLE user_youtubes (
+	youtube_account_id VARCHAR(255) NOT NULL, 
+	youtube_email VARCHAR(255), 
+	youtube_nickname VARCHAR(255), 
+	user_id VARCHAR(255) NOT NULL, 
+	PRIMARY KEY (youtube_account_id), 
+	UNIQUE (youtube_email), 
+	FOREIGN KEY(user_id) REFERENCES users (user_id) ON DELETE CASCADE
+)
+
+
+2026-02-10 17:04:08,889 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,889 INFO sqlalchemy.engine.Engine 
+CREATE TABLE parent_child (
+	parent_user_id VARCHAR(255) NOT NULL, 
+	child_user_id VARCHAR(255) NOT NULL, 
+	PRIMARY KEY (parent_user_id, child_user_id), 
+	FOREIGN KEY(parent_user_id) REFERENCES users (user_id) ON DELETE CASCADE, 
+	FOREIGN KEY(child_user_id) REFERENCES users (user_id) ON DELETE CASCADE
+)
+
+
+2026-02-10 17:04:08,889 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,890 INFO sqlalchemy.engine.Engine 
+CREATE TABLE complaints (
+	complaint_id VARCHAR(255) NOT NULL, 
+	video_id VARCHAR(255) NOT NULL, 
+	report_id VARCHAR(255), 
+	complaint_date DATETIME, 
+	complaint_content TEXT, 
+	complaint_target VARCHAR(255), 
+	PRIMARY KEY (complaint_id), 
+	FOREIGN KEY(video_id) REFERENCES videos (video_id) ON DELETE CASCADE, 
+	FOREIGN KEY(report_id) REFERENCES ai_reports (report_id) ON DELETE SET NULL
+)
+
+
+2026-02-10 17:04:08,890 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,890 INFO sqlalchemy.engine.Engine COMMIT
+2026-02-10 17:04:08,890 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,890 INFO sqlalchemy.engine.Engine INSERT INTO users (user_id, password, name, sex, birth_date, created_at, user_email) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?) RETURNING created_at
+2026-02-10 17:04:08,890 INFO sqlalchemy.engine.Engine [cached since 0.02883s ago] ('u1', 'p', 'n', None, None, 'e@e.com')
+2026-02-10 17:04:08,890 INFO sqlalchemy.engine.Engine INSERT INTO videos (video_id, video_title, channel, upload_date, video_script, video_runtime, thumbnail, youtube_url, saved_url, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-10 17:04:08,890 INFO sqlalchemy.engine.Engine [cached since 0.0502s ago] ('v1', 't', None, None, None, None, None, None, None, 'PENDING')
+2026-02-10 17:04:08,890 INFO sqlalchemy.engine.Engine COMMIT
+2026-02-10 17:04:08,890 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,890 INFO sqlalchemy.engine.Engine INSERT INTO watch_history (history_id, user_id, video_id, watched_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP) RETURNING watched_at
+2026-02-10 17:04:08,890 INFO sqlalchemy.engine.Engine [generated in 0.00004s] ('h1', 'u1', 'v1')
+2026-02-10 17:04:08,890 INFO sqlalchemy.engine.Engine COMMIT
+2026-02-10 17:04:08,891 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,891 INFO sqlalchemy.engine.Engine SELECT watch_history.history_id AS watch_history_history_id, watch_history.user_id AS watch_history_user_id, watch_history.video_id AS watch_history_video_id, watch_history.watched_at AS watch_history_watched_at 
+FROM watch_history
+ LIMIT ? OFFSET ?
+2026-02-10 17:04:08,891 INFO sqlalchemy.engine.Engine [generated in 0.00004s] (1, 0)
+PASSED2026-02-10 17:04:08,891 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-02-10 17:04:08,891 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,891 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("complaints")
+2026-02-10 17:04:08,891 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,891 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("videos")
+2026-02-10 17:04:08,891 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,891 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("watch_history")
+2026-02-10 17:04:08,891 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,891 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("ai_reports")
+2026-02-10 17:04:08,891 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,891 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("users")
+2026-02-10 17:04:08,891 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,891 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("user_youtubes")
+2026-02-10 17:04:08,891 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,891 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("parent_child")
+2026-02-10 17:04:08,891 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,891 INFO sqlalchemy.engine.Engine 
+DROP TABLE complaints
+2026-02-10 17:04:08,891 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,892 INFO sqlalchemy.engine.Engine 
+DROP TABLE parent_child
+2026-02-10 17:04:08,892 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,892 INFO sqlalchemy.engine.Engine 
+DROP TABLE user_youtubes
+2026-02-10 17:04:08,892 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,892 INFO sqlalchemy.engine.Engine 
+DROP TABLE ai_reports
+2026-02-10 17:04:08,892 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,892 INFO sqlalchemy.engine.Engine 
+DROP TABLE watch_history
+2026-02-10 17:04:08,892 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,892 INFO sqlalchemy.engine.Engine 
+DROP TABLE users
+2026-02-10 17:04:08,892 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,892 INFO sqlalchemy.engine.Engine 
+DROP TABLE videos
+2026-02-10 17:04:08,892 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,892 INFO sqlalchemy.engine.Engine COMMIT
+
+tests/features/video/test_video_repository.py::test_video_crud 2026-02-10 17:04:08,892 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,892 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("complaints")
+2026-02-10 17:04:08,892 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,892 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("complaints")
+2026-02-10 17:04:08,892 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,892 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("videos")
+2026-02-10 17:04:08,892 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,892 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("videos")
+2026-02-10 17:04:08,892 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,892 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("watch_history")
+2026-02-10 17:04:08,892 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,892 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("watch_history")
+2026-02-10 17:04:08,892 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,892 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("ai_reports")
+2026-02-10 17:04:08,892 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,892 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("ai_reports")
+2026-02-10 17:04:08,892 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,893 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("users")
+2026-02-10 17:04:08,893 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,893 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("users")
+2026-02-10 17:04:08,893 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,893 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("user_youtubes")
+2026-02-10 17:04:08,893 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,893 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("user_youtubes")
+2026-02-10 17:04:08,893 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,893 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("parent_child")
+2026-02-10 17:04:08,893 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,893 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("parent_child")
+2026-02-10 17:04:08,893 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,893 INFO sqlalchemy.engine.Engine 
+CREATE TABLE videos (
+	video_id VARCHAR(255) NOT NULL, 
+	video_title VARCHAR(255), 
+	channel VARCHAR(255), 
+	upload_date DATETIME, 
+	video_script TEXT, 
+	video_runtime INTEGER, 
+	thumbnail VARCHAR(500), 
+	youtube_url VARCHAR(500), 
+	saved_url VARCHAR(500), 
+	status VARCHAR(20), 
+	PRIMARY KEY (video_id), 
+	CONSTRAINT chk_video_status CHECK (status IN ('SAFE', 'HARMFUL', 'PENDING'))
+)
+
+
+2026-02-10 17:04:08,893 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,893 INFO sqlalchemy.engine.Engine 
+CREATE TABLE users (
+	user_id VARCHAR(255) NOT NULL, 
+	password VARCHAR(255) NOT NULL, 
+	name VARCHAR(100) NOT NULL, 
+	sex VARCHAR(10), 
+	birth_date DATE, 
+	created_at DATETIME, 
+	user_email VARCHAR(255) NOT NULL, 
+	PRIMARY KEY (user_id), 
+	CONSTRAINT chk_sex CHECK (sex IN ('M', 'F')), 
+	UNIQUE (user_email)
+)
+
+
+2026-02-10 17:04:08,893 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,893 INFO sqlalchemy.engine.Engine 
+CREATE TABLE watch_history (
+	history_id VARCHAR(255) NOT NULL, 
+	user_id VARCHAR(255) NOT NULL, 
+	video_id VARCHAR(255) NOT NULL, 
+	watched_at DATETIME, 
+	PRIMARY KEY (history_id), 
+	FOREIGN KEY(user_id) REFERENCES users (user_id) ON DELETE CASCADE, 
+	FOREIGN KEY(video_id) REFERENCES videos (video_id) ON DELETE CASCADE
+)
+
+
+2026-02-10 17:04:08,893 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,893 INFO sqlalchemy.engine.Engine CREATE INDEX idx_watch_time ON watch_history (watched_at)
+2026-02-10 17:04:08,893 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,893 INFO sqlalchemy.engine.Engine CREATE INDEX idx_watch_video ON watch_history (video_id)
+2026-02-10 17:04:08,893 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,893 INFO sqlalchemy.engine.Engine CREATE INDEX idx_watch_user ON watch_history (user_id)
+2026-02-10 17:04:08,893 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,893 INFO sqlalchemy.engine.Engine 
+CREATE TABLE ai_reports (
+	report_id VARCHAR(255) NOT NULL, 
+	video_id VARCHAR(255) NOT NULL, 
+	legal_report TEXT, 
+	fact_report TEXT, 
+	is_generated_by TEXT, 
+	summary TEXT, 
+	created_at DATETIME, 
+	PRIMARY KEY (report_id), 
+	UNIQUE (video_id), 
+	FOREIGN KEY(video_id) REFERENCES videos (video_id) ON DELETE CASCADE
+)
+
+
+2026-02-10 17:04:08,893 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,894 INFO sqlalchemy.engine.Engine 
+CREATE TABLE user_youtubes (
+	youtube_account_id VARCHAR(255) NOT NULL, 
+	youtube_email VARCHAR(255), 
+	youtube_nickname VARCHAR(255), 
+	user_id VARCHAR(255) NOT NULL, 
+	PRIMARY KEY (youtube_account_id), 
+	UNIQUE (youtube_email), 
+	FOREIGN KEY(user_id) REFERENCES users (user_id) ON DELETE CASCADE
+)
+
+
+2026-02-10 17:04:08,894 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,894 INFO sqlalchemy.engine.Engine 
+CREATE TABLE parent_child (
+	parent_user_id VARCHAR(255) NOT NULL, 
+	child_user_id VARCHAR(255) NOT NULL, 
+	PRIMARY KEY (parent_user_id, child_user_id), 
+	FOREIGN KEY(parent_user_id) REFERENCES users (user_id) ON DELETE CASCADE, 
+	FOREIGN KEY(child_user_id) REFERENCES users (user_id) ON DELETE CASCADE
+)
+
+
+2026-02-10 17:04:08,894 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,894 INFO sqlalchemy.engine.Engine 
+CREATE TABLE complaints (
+	complaint_id VARCHAR(255) NOT NULL, 
+	video_id VARCHAR(255) NOT NULL, 
+	report_id VARCHAR(255), 
+	complaint_date DATETIME, 
+	complaint_content TEXT, 
+	complaint_target VARCHAR(255), 
+	PRIMARY KEY (complaint_id), 
+	FOREIGN KEY(video_id) REFERENCES videos (video_id) ON DELETE CASCADE, 
+	FOREIGN KEY(report_id) REFERENCES ai_reports (report_id) ON DELETE SET NULL
+)
+
+
+2026-02-10 17:04:08,894 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,894 INFO sqlalchemy.engine.Engine COMMIT
+2026-02-10 17:04:08,894 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,894 INFO sqlalchemy.engine.Engine INSERT INTO videos (video_id, video_title, channel, upload_date, video_script, video_runtime, thumbnail, youtube_url, saved_url, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-10 17:04:08,894 INFO sqlalchemy.engine.Engine [cached since 0.05429s ago] ('v1', '테스트영상', None, None, None, 100, None, None, None, 'PENDING')
+2026-02-10 17:04:08,894 INFO sqlalchemy.engine.Engine COMMIT
+2026-02-10 17:04:08,894 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,894 INFO sqlalchemy.engine.Engine SELECT videos.video_id, videos.video_title, videos.channel, videos.upload_date, videos.video_script, videos.video_runtime, videos.thumbnail, videos.youtube_url, videos.saved_url, videos.status 
+FROM videos 
+WHERE videos.video_id = ?
+2026-02-10 17:04:08,894 INFO sqlalchemy.engine.Engine [cached since 0.04839s ago] ('v1',)
+2026-02-10 17:04:08,894 INFO sqlalchemy.engine.Engine SELECT videos.video_id AS videos_video_id, videos.video_title AS videos_video_title, videos.channel AS videos_channel, videos.upload_date AS videos_upload_date, videos.video_script AS videos_video_script, videos.video_runtime AS videos_video_runtime, videos.thumbnail AS videos_thumbnail, videos.youtube_url AS videos_youtube_url, videos.saved_url AS videos_saved_url, videos.status AS videos_status 
+FROM videos 
+WHERE videos.video_id = ?
+ LIMIT ? OFFSET ?
+2026-02-10 17:04:08,894 INFO sqlalchemy.engine.Engine [cached since 0.00825s ago] ('v1', 1, 0)
+2026-02-10 17:04:08,895 INFO sqlalchemy.engine.Engine SELECT videos.video_id AS videos_video_id, videos.video_title AS videos_video_title, videos.channel AS videos_channel, videos.upload_date AS videos_upload_date, videos.video_script AS videos_video_script, videos.video_runtime AS videos_video_runtime, videos.thumbnail AS videos_thumbnail, videos.youtube_url AS videos_youtube_url, videos.saved_url AS videos_saved_url, videos.status AS videos_status 
+FROM videos 
+WHERE videos.status = ?
+ LIMIT ? OFFSET ?
+2026-02-10 17:04:08,895 INFO sqlalchemy.engine.Engine [generated in 0.00004s] ('PENDING', 10, 0)
+2026-02-10 17:04:08,895 INFO sqlalchemy.engine.Engine UPDATE videos SET status=? WHERE videos.video_id = ?
+2026-02-10 17:04:08,895 INFO sqlalchemy.engine.Engine [generated in 0.00003s] ('SAFE', 'v1')
+2026-02-10 17:04:08,895 INFO sqlalchemy.engine.Engine COMMIT
+2026-02-10 17:04:08,895 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,895 INFO sqlalchemy.engine.Engine SELECT videos.video_id, videos.video_title, videos.channel, videos.upload_date, videos.video_script, videos.video_runtime, videos.thumbnail, videos.youtube_url, videos.saved_url, videos.status 
+FROM videos 
+WHERE videos.video_id = ?
+2026-02-10 17:04:08,895 INFO sqlalchemy.engine.Engine [cached since 0.04931s ago] ('v1',)
+2026-02-10 17:04:08,895 INFO sqlalchemy.engine.Engine SELECT videos.video_id AS videos_video_id, videos.video_title AS videos_video_title, videos.channel AS videos_channel, videos.upload_date AS videos_upload_date, videos.video_script AS videos_video_script, videos.video_runtime AS videos_video_runtime, videos.thumbnail AS videos_thumbnail, videos.youtube_url AS videos_youtube_url, videos.saved_url AS videos_saved_url, videos.status AS videos_status 
+FROM videos 
+WHERE videos.video_id = ?
+ LIMIT ? OFFSET ?
+2026-02-10 17:04:08,895 INFO sqlalchemy.engine.Engine [cached since 0.009142s ago] ('v1', 1, 0)
+2026-02-10 17:04:08,895 INFO sqlalchemy.engine.Engine SELECT videos.video_id AS videos_video_id, videos.video_title AS videos_video_title, videos.channel AS videos_channel, videos.upload_date AS videos_upload_date, videos.video_script AS videos_video_script, videos.video_runtime AS videos_video_runtime, videos.thumbnail AS videos_thumbnail, videos.youtube_url AS videos_youtube_url, videos.saved_url AS videos_saved_url, videos.status AS videos_status 
+FROM videos 
+WHERE videos.video_id = ?
+ LIMIT ? OFFSET ?
+2026-02-10 17:04:08,895 INFO sqlalchemy.engine.Engine [cached since 0.009287s ago] ('v1', 1, 0)
+2026-02-10 17:04:08,896 INFO sqlalchemy.engine.Engine DELETE FROM videos WHERE videos.video_id = ?
+2026-02-10 17:04:08,896 INFO sqlalchemy.engine.Engine [cached since 0.009198s ago] ('v1',)
+2026-02-10 17:04:08,896 INFO sqlalchemy.engine.Engine COMMIT
+2026-02-10 17:04:08,896 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,896 INFO sqlalchemy.engine.Engine SELECT videos.video_id AS videos_video_id, videos.video_title AS videos_video_title, videos.channel AS videos_channel, videos.upload_date AS videos_upload_date, videos.video_script AS videos_video_script, videos.video_runtime AS videos_video_runtime, videos.thumbnail AS videos_thumbnail, videos.youtube_url AS videos_youtube_url, videos.saved_url AS videos_saved_url, videos.status AS videos_status 
+FROM videos 
+WHERE videos.video_id = ?
+ LIMIT ? OFFSET ?
+2026-02-10 17:04:08,896 INFO sqlalchemy.engine.Engine [cached since 0.009608s ago] ('v1', 1, 0)
+PASSED2026-02-10 17:04:08,896 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-02-10 17:04:08,896 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,896 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("complaints")
+2026-02-10 17:04:08,896 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,896 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("videos")
+2026-02-10 17:04:08,896 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,896 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("watch_history")
+2026-02-10 17:04:08,896 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,896 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("ai_reports")
+2026-02-10 17:04:08,896 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,896 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("users")
+2026-02-10 17:04:08,896 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,896 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("user_youtubes")
+2026-02-10 17:04:08,896 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,896 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("parent_child")
+2026-02-10 17:04:08,896 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,896 INFO sqlalchemy.engine.Engine 
+DROP TABLE complaints
+2026-02-10 17:04:08,896 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,896 INFO sqlalchemy.engine.Engine 
+DROP TABLE parent_child
+2026-02-10 17:04:08,896 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,897 INFO sqlalchemy.engine.Engine 
+DROP TABLE user_youtubes
+2026-02-10 17:04:08,897 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,897 INFO sqlalchemy.engine.Engine 
+DROP TABLE ai_reports
+2026-02-10 17:04:08,897 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,897 INFO sqlalchemy.engine.Engine 
+DROP TABLE watch_history
+2026-02-10 17:04:08,897 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,897 INFO sqlalchemy.engine.Engine 
+DROP TABLE users
+2026-02-10 17:04:08,897 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,897 INFO sqlalchemy.engine.Engine 
+DROP TABLE videos
+2026-02-10 17:04:08,897 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,897 INFO sqlalchemy.engine.Engine COMMIT
+
+tests/features/video/test_video_repository.py::test_watch_history 2026-02-10 17:04:08,897 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,897 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("complaints")
+2026-02-10 17:04:08,897 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,897 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("complaints")
+2026-02-10 17:04:08,897 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,897 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("videos")
+2026-02-10 17:04:08,897 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,897 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("videos")
+2026-02-10 17:04:08,897 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,897 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("watch_history")
+2026-02-10 17:04:08,897 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,897 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("watch_history")
+2026-02-10 17:04:08,897 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,897 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("ai_reports")
+2026-02-10 17:04:08,897 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,897 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("ai_reports")
+2026-02-10 17:04:08,897 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,898 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("users")
+2026-02-10 17:04:08,898 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,898 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("users")
+2026-02-10 17:04:08,898 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,898 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("user_youtubes")
+2026-02-10 17:04:08,898 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,898 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("user_youtubes")
+2026-02-10 17:04:08,898 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,898 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("parent_child")
+2026-02-10 17:04:08,898 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,898 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("parent_child")
+2026-02-10 17:04:08,898 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,898 INFO sqlalchemy.engine.Engine 
+CREATE TABLE videos (
+	video_id VARCHAR(255) NOT NULL, 
+	video_title VARCHAR(255), 
+	channel VARCHAR(255), 
+	upload_date DATETIME, 
+	video_script TEXT, 
+	video_runtime INTEGER, 
+	thumbnail VARCHAR(500), 
+	youtube_url VARCHAR(500), 
+	saved_url VARCHAR(500), 
+	status VARCHAR(20), 
+	PRIMARY KEY (video_id), 
+	CONSTRAINT chk_video_status CHECK (status IN ('SAFE', 'HARMFUL', 'PENDING'))
+)
+
+
+2026-02-10 17:04:08,898 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,898 INFO sqlalchemy.engine.Engine 
+CREATE TABLE users (
+	user_id VARCHAR(255) NOT NULL, 
+	password VARCHAR(255) NOT NULL, 
+	name VARCHAR(100) NOT NULL, 
+	sex VARCHAR(10), 
+	birth_date DATE, 
+	created_at DATETIME, 
+	user_email VARCHAR(255) NOT NULL, 
+	PRIMARY KEY (user_id), 
+	CONSTRAINT chk_sex CHECK (sex IN ('M', 'F')), 
+	UNIQUE (user_email)
+)
+
+
+2026-02-10 17:04:08,898 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,898 INFO sqlalchemy.engine.Engine 
+CREATE TABLE watch_history (
+	history_id VARCHAR(255) NOT NULL, 
+	user_id VARCHAR(255) NOT NULL, 
+	video_id VARCHAR(255) NOT NULL, 
+	watched_at DATETIME, 
+	PRIMARY KEY (history_id), 
+	FOREIGN KEY(user_id) REFERENCES users (user_id) ON DELETE CASCADE, 
+	FOREIGN KEY(video_id) REFERENCES videos (video_id) ON DELETE CASCADE
+)
+
+
+2026-02-10 17:04:08,898 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,898 INFO sqlalchemy.engine.Engine CREATE INDEX idx_watch_time ON watch_history (watched_at)
+2026-02-10 17:04:08,898 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,898 INFO sqlalchemy.engine.Engine CREATE INDEX idx_watch_video ON watch_history (video_id)
+2026-02-10 17:04:08,898 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,898 INFO sqlalchemy.engine.Engine CREATE INDEX idx_watch_user ON watch_history (user_id)
+2026-02-10 17:04:08,898 INFO sqlalchemy.engine.Engine [no key 0.00003s] ()
+2026-02-10 17:04:08,898 INFO sqlalchemy.engine.Engine 
+CREATE TABLE ai_reports (
+	report_id VARCHAR(255) NOT NULL, 
+	video_id VARCHAR(255) NOT NULL, 
+	legal_report TEXT, 
+	fact_report TEXT, 
+	is_generated_by TEXT, 
+	summary TEXT, 
+	created_at DATETIME, 
+	PRIMARY KEY (report_id), 
+	UNIQUE (video_id), 
+	FOREIGN KEY(video_id) REFERENCES videos (video_id) ON DELETE CASCADE
+)
+
+
+2026-02-10 17:04:08,899 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,899 INFO sqlalchemy.engine.Engine 
+CREATE TABLE user_youtubes (
+	youtube_account_id VARCHAR(255) NOT NULL, 
+	youtube_email VARCHAR(255), 
+	youtube_nickname VARCHAR(255), 
+	user_id VARCHAR(255) NOT NULL, 
+	PRIMARY KEY (youtube_account_id), 
+	UNIQUE (youtube_email), 
+	FOREIGN KEY(user_id) REFERENCES users (user_id) ON DELETE CASCADE
+)
+
+
+2026-02-10 17:04:08,899 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,899 INFO sqlalchemy.engine.Engine 
+CREATE TABLE parent_child (
+	parent_user_id VARCHAR(255) NOT NULL, 
+	child_user_id VARCHAR(255) NOT NULL, 
+	PRIMARY KEY (parent_user_id, child_user_id), 
+	FOREIGN KEY(parent_user_id) REFERENCES users (user_id) ON DELETE CASCADE, 
+	FOREIGN KEY(child_user_id) REFERENCES users (user_id) ON DELETE CASCADE
+)
+
+
+2026-02-10 17:04:08,899 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,899 INFO sqlalchemy.engine.Engine 
+CREATE TABLE complaints (
+	complaint_id VARCHAR(255) NOT NULL, 
+	video_id VARCHAR(255) NOT NULL, 
+	report_id VARCHAR(255), 
+	complaint_date DATETIME, 
+	complaint_content TEXT, 
+	complaint_target VARCHAR(255), 
+	PRIMARY KEY (complaint_id), 
+	FOREIGN KEY(video_id) REFERENCES videos (video_id) ON DELETE CASCADE, 
+	FOREIGN KEY(report_id) REFERENCES ai_reports (report_id) ON DELETE SET NULL
+)
+
+
+2026-02-10 17:04:08,899 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,899 INFO sqlalchemy.engine.Engine COMMIT
+2026-02-10 17:04:08,899 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,899 INFO sqlalchemy.engine.Engine INSERT INTO users (user_id, password, name, sex, birth_date, created_at, user_email) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?) RETURNING created_at
+2026-02-10 17:04:08,899 INFO sqlalchemy.engine.Engine [cached since 0.03807s ago] ('u_watch', 'pw', '시청자', 'F', None, 'w@w.com')
+2026-02-10 17:04:08,899 INFO sqlalchemy.engine.Engine COMMIT
+2026-02-10 17:04:08,899 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,899 INFO sqlalchemy.engine.Engine SELECT users.user_id, users.password, users.name, users.sex, users.birth_date, users.created_at, users.user_email 
+FROM users 
+WHERE users.user_id = ?
+2026-02-10 17:04:08,899 INFO sqlalchemy.engine.Engine [cached since 0.02355s ago] ('u_watch',)
+2026-02-10 17:04:08,899 INFO sqlalchemy.engine.Engine INSERT INTO videos (video_id, video_title, channel, upload_date, video_script, video_runtime, thumbnail, youtube_url, saved_url, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-10 17:04:08,899 INFO sqlalchemy.engine.Engine [cached since 0.05972s ago] ('v_watch', '잼난거', None, None, None, None, None, None, None, 'SAFE')
+2026-02-10 17:04:08,900 INFO sqlalchemy.engine.Engine COMMIT
+2026-02-10 17:04:08,900 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,900 INFO sqlalchemy.engine.Engine SELECT videos.video_id, videos.video_title, videos.channel, videos.upload_date, videos.video_script, videos.video_runtime, videos.thumbnail, videos.youtube_url, videos.saved_url, videos.status 
+FROM videos 
+WHERE videos.video_id = ?
+2026-02-10 17:04:08,900 INFO sqlalchemy.engine.Engine [cached since 0.05379s ago] ('v_watch',)
+2026-02-10 17:04:08,900 INFO sqlalchemy.engine.Engine INSERT INTO watch_history (history_id, user_id, video_id, watched_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP) RETURNING watched_at
+2026-02-10 17:04:08,900 INFO sqlalchemy.engine.Engine [cached since 0.01002s ago] ('h1', 'u_watch', 'v_watch')
+2026-02-10 17:04:08,900 INFO sqlalchemy.engine.Engine COMMIT
+2026-02-10 17:04:08,901 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,901 INFO sqlalchemy.engine.Engine SELECT watch_history.history_id, watch_history.user_id, watch_history.video_id, watch_history.watched_at 
+FROM watch_history 
+WHERE watch_history.history_id = ?
+2026-02-10 17:04:08,901 INFO sqlalchemy.engine.Engine [generated in 0.00004s] ('h1',)
+2026-02-10 17:04:08,901 INFO sqlalchemy.engine.Engine SELECT watch_history.history_id AS watch_history_history_id, watch_history.user_id AS watch_history_user_id, watch_history.video_id AS watch_history_video_id, watch_history.watched_at AS watch_history_watched_at 
+FROM watch_history 
+WHERE watch_history.user_id = ? ORDER BY watch_history.watched_at DESC
+ LIMIT ? OFFSET ?
+2026-02-10 17:04:08,901 INFO sqlalchemy.engine.Engine [generated in 0.00004s] ('u_watch', 50, 0)
+PASSED2026-02-10 17:04:08,901 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-02-10 17:04:08,901 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 17:04:08,901 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("complaints")
+2026-02-10 17:04:08,901 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,901 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("videos")
+2026-02-10 17:04:08,901 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,901 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("watch_history")
+2026-02-10 17:04:08,901 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,901 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("ai_reports")
+2026-02-10 17:04:08,901 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,902 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("users")
+2026-02-10 17:04:08,902 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,902 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("user_youtubes")
+2026-02-10 17:04:08,902 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,902 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("parent_child")
+2026-02-10 17:04:08,902 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 17:04:08,902 INFO sqlalchemy.engine.Engine 
+DROP TABLE complaints
+2026-02-10 17:04:08,902 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,902 INFO sqlalchemy.engine.Engine 
+DROP TABLE parent_child
+2026-02-10 17:04:08,902 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,902 INFO sqlalchemy.engine.Engine 
+DROP TABLE user_youtubes
+2026-02-10 17:04:08,902 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,902 INFO sqlalchemy.engine.Engine 
+DROP TABLE ai_reports
+2026-02-10 17:04:08,902 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,902 INFO sqlalchemy.engine.Engine 
+DROP TABLE watch_history
+2026-02-10 17:04:08,902 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,902 INFO sqlalchemy.engine.Engine 
+DROP TABLE users
+2026-02-10 17:04:08,902 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,902 INFO sqlalchemy.engine.Engine 
+DROP TABLE videos
+2026-02-10 17:04:08,902 INFO sqlalchemy.engine.Engine [no key 0.00002s] ()
+2026-02-10 17:04:08,902 INFO sqlalchemy.engine.Engine COMMIT
+
+
+============================== 13 passed in 0.09s ==============================
