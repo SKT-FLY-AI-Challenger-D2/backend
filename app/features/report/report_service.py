@@ -115,11 +115,11 @@ class ReportService:
             min_score = min(scores)
             final_score = (sum(scores) - min_score) / 2
 
-        if final_score >= 0.65: # 0.65 이상 : 위험도 2  ( 높음 )
+        if final_score >= 0.6: # 0.65 이상 : 위험도 2  ( 높음 )
             final_status = 2
             short_report_result = short_report + " 확률이 매우 높아 위험합니다."  
 
-        elif final_score >= 0.4: # 0.4 이상 : 위험도 1 ( 중간 )
+        elif final_score >= 0.3: # 0.4 이상 : 위험도 1 ( 중간 )
             final_status = 1
             short_report_result = short_report + " 확률이 있어 주의가 필요합니다."
         else:
