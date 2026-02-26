@@ -152,6 +152,10 @@ class ReportService:
     
     def save_report_to_db(self, video_id: str, ai_result: dict) -> None:
         try:
+            existing = self.report_repo.get_report_by_video_id(video_id)
+            if existing:
+                print(f"[ReportService] video_id={video_id} 이미 리포트 존재, 저장 스킵")
+                return
             report_id = str(uuid.uuid4())
             while self.report_repo.get_report_by_id(report_id):
                 report_id = str(uuid.uuid4())
