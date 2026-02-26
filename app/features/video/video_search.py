@@ -5,7 +5,8 @@ from app.core.config import settings
 class VideoSearch:
 
     def __init__(self):
-        self.api_key = settings.YOUTUBE_API_KEY
+        self.api_key = settings.get_next_youtube_api_key()
+        self.retry = False
 
     def search_youtube(self, query: str) -> dict | None:
         """
@@ -36,11 +37,14 @@ class VideoSearch:
                 maxResults=1
             ).execute()
 
+            self.retry = False
+
             items = search_response.get("items", [])
             if not items: # 검색된 내용이 없는 경우
                 return None
 
             item = items[0]
+
             return {
                 "video_id": item["id"]["videoId"],
                 "title": item["snippet"]["title"],
@@ -49,8 +53,15 @@ class VideoSearch:
             }
 
         except HttpError as e:
+            print(f"[Video Search] 영상 검색 Youtube API 호출 중 HTTP 오류 재시도: {e}")
+            self.api_key = settings.get_next_youtube_api_key()
+            if not self.retry:
+                self.retry = True
+                return self.search_youtube(query)
+            
             print(f"[Video Search] 영상 검색 Youtube API 호출 중 HTTP 오류: {e}")
             raise RuntimeError(f"영상 검색 Youtube API 호출 중 HTTP 오류: {e}")
+        
         except Exception as e:
             print(f"[Video Search] 영상 검색 중 알 수 없는 오류: {e}")
             raise RuntimeError(f"영상 검색 중 알 수 없는 오류: {e}")
