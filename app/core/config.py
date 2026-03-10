@@ -1,5 +1,6 @@
 import os
 from dotenv import load_dotenv
+import itertools
 
 # .env 파일 로드
 load_dotenv()
@@ -15,8 +16,20 @@ class Settings:
         "mysql+pymysql://root:1234@localhost:3306/skt_fly_ai_final_project"
     )
 
-    YOUTUBE_API_KEY: str = os.getenv("YOUTUBE_API_KEY", "")
+    YOUTUBE_API_KEYS = []#= [os.getenv(f"YOUTUBE_API_KEY{i}") for i in range(10)]
+    for i in range(10):
+        key = os.getenv(f"YOUTUBE_API_KEY{i}", "")
+        if key != "":
+            YOUTUBE_API_KEYS.append(key)
 
-    GOOGLE_API_KEY: str = os.getenv("GOOGLE_API_KEY", "")
+    youtube_api_key_cycle = itertools.cycle(YOUTUBE_API_KEYS)
+
+    def get_next_youtube_api_key(self) -> str:
+        """다음 순서의 API 키를 반환합니다."""
+        key = self.youtube_api_key_cycle
+        print(f"[Config] Youtube Key 바꿈: {key}")
+        return next(key)
+
+
 
 settings = Settings()
