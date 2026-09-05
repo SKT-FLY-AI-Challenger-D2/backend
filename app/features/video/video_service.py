@@ -3,8 +3,6 @@ import re
 import html # html 문법 정규화
 import difflib
 
-from app.core.database import SessionLocal
-
 from app.features.video.video_search import VideoSearch
 from app.features.video.video_schema import SearchRequest, SearchResponse
 
@@ -19,8 +17,8 @@ class VideoService:
     검색(video) -> DB 확인 -> 분석 요청(report) -> 결과 파싱 -> 알림(notification) 및 신고(complaint)
     """
 
-    def __init__(self):
-        self.db: Session = SessionLocal()
+    def __init__(self, db: Session):
+        self.db: Session = db
 
         self.video_search = VideoSearch()
         self.report_service = ReportService(self.db)
