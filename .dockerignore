@@ -1,0 +1,10 @@
+# TASK-12: 비밀·개인·생성 파일을 빌드 컨텍스트에서 제외한다
+.env
+info.txt
+.git
+__pycache__
+*.pyc
+venv/
+.venv/
+tests/
+.pytest_cache/
