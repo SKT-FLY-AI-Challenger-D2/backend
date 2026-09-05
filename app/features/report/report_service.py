@@ -5,6 +5,8 @@ import httpx
 import uuid
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
+
 # DB 저장용 
 from app.features.report.report_repository import ReportRepository
 from app.features.report.report_model import AIReport, ReportEvidence
@@ -231,7 +233,7 @@ class ReportService:
 
         try:
             response = httpx.post( #httpx가 비동기가 가능해서 httpx 사용
-                url = "http://127.0.0.1:8001/analyze", # AI 서버와 통신
+                url = f"{settings.AI_BASE_URL.rstrip('/')}/analyze", # AI 서버와 통신 (TASK-04)
                 json={
                     "youtube_url" : request.youtube_url
                 },
