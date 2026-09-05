@@ -107,10 +107,14 @@ class VideoService:
                     
                     print("[VideoService] DB에서 기존 분석 반환")
                     return self._build_success_response(
-                        search_result=search_result, 
-                        analysis_data=previous_report, 
+                        search_result=search_result,
+                        analysis_data=previous_report,
                         message="DB에서 기존 분석 반환"
                     )
+                # HARMFUL인데 previous_report가 없으면 PENDING으로 되돌려 재분석 허용
+                print(f"[VideoService] HARMFUL 상태이나 리포트 없음, PENDING으로 재설정")
+                video.status = 'PENDING'
+                self.video_repo.update_video(video)
 
         # vide가 없거나 video.status == 'PENDING'이거나, previous_report가 없거나 => AI 서버 호출
         print(f"[VideoService] 검색 성공 -> ReportService로 분석 이동")
@@ -152,6 +156,7 @@ class VideoService:
             analysis_result: AnalysisResult = self.report_service.analyze_video(analysis_request)
         except Exception as e: # report_service.py 과정에서 오류 발생 시
             print(f"[Video Service] 분석 서비스 요청 오류: {str(e)}")
+            self.db.rollback() # 세션 롤백
             raise RuntimeError(f"분석 서비스 요청 오류: {str(e)}") from e
 
         if analysis_result.error:
