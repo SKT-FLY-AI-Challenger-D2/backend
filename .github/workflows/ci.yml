@@ -1,0 +1,80 @@
+name: CI/CD
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+env:
+  IMAGE: ghcr.io/skt-fly-ai-challenger-d2/backend
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: 깨끗한 설치
+        run: pip install --no-cache-dir -r requirements.txt
+      - name: 테스트 (59개 + 계약 fixture 포함)
+        env:
+          # 실제 DB 없이 conftest의 인메모리 SQLite로 검증. 아래 값은 lazy engine용 더미.
+          DB_URL: mysql+pymysql://ci:ci@127.0.0.1:3306/ci
+          # YOUTUBE_API_KEYS가 비면 VideoSearch 생성자에서 StopIteration. 테스트는 전부
+          # 유튜브 API를 mock하므로 실제 키 불필요, 더미면 충분.
+          YOUTUBE_API_KEY0: dummy-ci-key
+        run: python -m pytest -q
+
+  build-and-push:
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:latest
+            ${{ env.IMAGE }}:${{ github.sha }}
+
+  deploy:
+    needs: build-and-push
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    environment: validation   # ← Settings의 Required reviewers가 승인해야 진행
+    steps:
+      - name: Azure 검증 VM에 backend만 롤링 배포
+        env:
+          SSH_KEY: ${{ secrets.AZURE_SSH_KEY }}
+          HOST: ${{ vars.AZURE_HOST }}
+          SSH_USER: ${{ vars.AZURE_USER }}
+          GHCR_TOKEN: ${{ github.token }}
+          GHCR_USER: ${{ github.actor }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=accept-new "$SSH_USER@$HOST" '
+            set -e
+            echo "'"$GHCR_TOKEN"'" | docker login ghcr.io -u "'"$GHCR_USER"'" --password-stdin
+            cd ~/realyai
+            docker compose pull backend
+            docker compose up -d --no-deps backend
+            docker logout ghcr.io
+            docker compose ps backend
+          '
