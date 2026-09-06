@@ -775,12 +775,14 @@ def test_save_report_to_db_uuid_collision_retry(mock_uuid, db_session):
     assert saved_report.report_id == str(uuid.UUID(int=2))
 
 
-# [테스트 목적] 동일한 video_id로 리포트를 2번 생성하려 할 때 Unique 제약 조건 위반(IntegrityError) 발생 검증
-# [테스트 동작] 이미 리포트가 존재하는 video_id로 save_report_to_db를 다시 호출
+# [테스트 목적] 이미 리포트가 있는 video_id로 다시 호출하면 조용히 스킵하고 중복을 만들지 않음을 검증
+# [테스트 동작] save_report_to_db를 같은 video_id로 두 번 호출
 # [Input] 이미 리포트가 존재하는 video_id
-# [Output] RuntimeError 예외 발생 및 DB 롤백 방어
+# [Output] 두 번째 호출은 예외 없이 return, 새 리포트가 생성되지 않음
+#   (save_report_to_db 상단의 `if existing: return` 방어 로직 검증)
 def test_save_report_to_db_duplicate_video_id(db_session):
     video_repo = VideoRepository(db_session)
+    report_repo = ReportRepository(db_session)
     report_service = ReportService(db_session)
 
     video = Video(video_id="v_dup", video_title="Duplicate Test", status="PENDING")
@@ -788,14 +790,15 @@ def test_save_report_to_db_duplicate_video_id(db_session):
 
     ai_result = {"final_score": 0.5}
 
-    # 첫 번째 정상 저장
+    report_service.save_report_to_db(video_id="v_dup", ai_result=ai_result)
+    first = report_repo.get_report_by_video_id("v_dup")
+    assert first is not None
+
+    # 두 번째 호출: 기존 리포트를 감지하면 예외 없이 스킵한다
     report_service.save_report_to_db(video_id="v_dup", ai_result=ai_result)
 
-    # 두 번째 저장 시도 (AIReport의 video_id는 unique=True 설정됨)
-    with pytest.raises(RuntimeError) as exc_info:
-        report_service.save_report_to_db(video_id="v_dup", ai_result=ai_result)
-        
-    assert "DB 처리 중 시스템 오류가 발생했습니다" in str(exc_info.value)
+    second = report_repo.get_report_by_video_id("v_dup")
+    assert second.report_id == first.report_id  # 새 리포트가 생기지 않음
 
 from unittest.mock import patch, MagicMock
 import httpx
