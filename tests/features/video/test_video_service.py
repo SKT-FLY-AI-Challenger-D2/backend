@@ -39,7 +39,7 @@ def test_분석_실패시_세션이_rollback되고_이후_사용_가능하다(mo
     """
     from app.features.video.video_model import Video
 
-    mock_video_search_cls.return_value.search_youtube.return_value = dict(FAKE_SEARCH_RESULT)
+    mock_video_search_cls.return_value.search_youtube_candidates.return_value = [dict(FAKE_SEARCH_RESULT)]
 
     service = VideoService(db_session)
     service.report_service.analyze_video = MagicMock(side_effect=RuntimeError("AI 서버 호출 실패"))
