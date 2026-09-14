@@ -49,16 +49,21 @@ class VideoService:
         search_result = self.video_search.search_youtube(query) # 검색 수행
         # # 더미 데이터
         # search_result = {
-        #     'video_id': 'rA5Mt_XdoSQ', 
-        #     'title': '[무한도전] 왔다 내 도파민🤑 돈으로도 못 사는 무한도전 표 명품 티키타카 모음.zip | 무한도전⏱오분순삭 MBC070915방송', 
-        #     'channel_title': '오분순삭', 
+        #     'video_id': 'rA5Mt_XdoSQ',
+        #     'title': '[무한도전] 왔다 내 도파민🤑 돈으로도 못 사는 무한도전 표 명품 티키타카 모음.zip | 무한도전⏱오분순삭 MBC070915방송',
+        #     'channel_title': '오분순삭',
         #     'url': 'https://www.youtube.com/watch?v=rA5Mt_XdoSQ'
         # }
 
 
         # 1-2. 검색 실패 처리
         if not search_result:
-            print("[Video Service] 영상 검색에 실패했습니다.")
+            # 진단용 로그: 원본 요청 값과 실제로 API에 보낸 쿼리 문자열을 남긴다
+            # (이게 없어서 실패 시 뭘로 검색했는지조차 알 수 없었던 문제 수정).
+            print(
+                f"[Video Service] 영상 검색에 실패했습니다. "
+                f"요청 제목='{request.title}' 요청 채널='{request.channel}' 최종 쿼리='{query}'"
+            )
             raise RuntimeError("영상 검색에 실패했습니다.")
         
         # 1-3. 검색한 url의 제목, 채널명과 입력받은 제목, 채널 명이 다른 경우 분석하지 않고 반환
