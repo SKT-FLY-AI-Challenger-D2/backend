@@ -46,18 +46,23 @@ class VideoService:
 
         query = f"{request.title} {request.channel}".strip() # 제목 + 채널명으로 검색 쿼리 만들기
         query = re.sub(r'[|&"\-\(\)]', ' ', query) # 검색 명령어로 쓰이는 특수문자 지우기
-        search_result = self.video_search.search_youtube(query) # 검색 수행
+
+        # 실사용자 재현 사례(개발 로그 참고): maxResults=1로 1건만 가져오면, 구독자
+        # 많은 채널에서는 검색 관련성 랭킹 1위가 사용자가 실제로 본 그 영상이 아니라
+        # 채널의 다른 인기 영상으로 나오는 경우가 있었다("지무비" 채널 + "메이드 인
+        # 코리아 시즌2.." 검색 -> 1위로 "취사병 전설이 되다.."가 나옴). 여러 후보를
+        # 받아서 그중 실제로 매칭되는 것을 고른다.
+        candidates = self.video_search.search_youtube_candidates(query, max_results=5)
         # # 더미 데이터
-        # search_result = {
+        # candidates = [{
         #     'video_id': 'rA5Mt_XdoSQ',
         #     'title': '[무한도전] 왔다 내 도파민🤑 돈으로도 못 사는 무한도전 표 명품 티키타카 모음.zip | 무한도전⏱오분순삭 MBC070915방송',
         #     'channel_title': '오분순삭',
         #     'url': 'https://www.youtube.com/watch?v=rA5Mt_XdoSQ'
-        # }
-
+        # }]
 
         # 1-2. 검색 실패 처리
-        if not search_result:
+        if not candidates:
             # 진단용 로그: 원본 요청 값과 실제로 API에 보낸 쿼리 문자열을 남긴다
             # (이게 없어서 실패 시 뭘로 검색했는지조차 알 수 없었던 문제 수정).
             print(
@@ -65,16 +70,24 @@ class VideoService:
                 f"요청 제목='{request.title}' 요청 채널='{request.channel}' 최종 쿼리='{query}'"
             )
             raise RuntimeError("영상 검색에 실패했습니다.")
-        
+
         # 1-3. 검색한 url의 제목, 채널명과 입력받은 제목, 채널 명이 다른 경우 분석하지 않고 반환
-        print("[Video Service] 검색 완료, 비교 중")
-        search_result['title'] = html.unescape(search_result['title'])
-        if not self._is_video_match(request, search_result):
+        print(f"[Video Service] 검색 완료 ({len(candidates)}건), 비교 중")
+        search_result = None
+        for candidate in candidates:
+            candidate['title'] = html.unescape(candidate['title'])
+            if self._is_video_match(request, candidate):
+                search_result = candidate
+                break
+
+        if not search_result:
+            candidate_summaries = [f"{c['title']} ({c['channel_title']})" for c in candidates]
             print(
-                f"[Video Service] 검색 결과와 요청 내용이 다릅니다. (검색된 제목: {search_result['title']}, 채널명: {search_result['channel_title']})"
+                f"[Video Service] 검색 결과 {len(candidates)}건 모두 요청 내용과 다릅니다. "
+                f"후보={candidate_summaries}"
             )
             raise RuntimeError(
-                f"검색 결과와 요청 내용이 다릅니다. (검색된 제목: {search_result['title']}, 채널명: {search_result['channel_title']})"
+                f"검색 결과와 요청 내용이 다릅니다. (검색된 제목: {candidates[0]['title']}, 채널명: {candidates[0]['channel_title']})"
             )
 
         print("[Video Service] 기존 비디오 DB 확인 시작")
