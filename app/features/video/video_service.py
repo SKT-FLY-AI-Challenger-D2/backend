@@ -213,16 +213,25 @@ class VideoService:
         channel_similarity = difflib.SequenceMatcher(None, req_channel, res_channel).ratio()
 
         channel_match = (req_channel in res_channel) or (res_channel in req_channel) or (channel_similarity >= 0.9)
-        
+
         if not channel_match:
-            return False 
+            # 실패 원인 진단용 로그(요청 쪽 값이 안 남아 원인 파악이 안 됐던 문제 수정).
+            print(
+                f"[Video Service] 채널명 불일치: 요청='{request.channel}'(정규화='{req_channel}') "
+                f"vs 검색='{result['channel_title']}'(정규화='{res_channel}') 유사도={channel_similarity:.3f}"
+            )
+            return False
 
         # 2. 제목 유사도 검사
         title_similarity = difflib.SequenceMatcher(None, req_title, res_title).ratio()
-        
+
         title_match = (req_title in res_title) or (res_title in req_title) or (title_similarity >= 0.8)
 
         if not title_match:
+            print(
+                f"[Video Service] 제목 불일치: 요청='{request.title}'(정규화='{req_title}') "
+                f"vs 검색='{result['title']}'(정규화='{res_title}') 유사도={title_similarity:.3f}"
+            )
             return False
             
         return True
